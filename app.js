@@ -244,7 +244,7 @@ async function rewriteCopy() {
     const original = document.getElementById('originalCopy').value.trim();
     if (!original) return showToast('请输入原始文案');
     const intensity = document.getElementById('rewriteIntensity').value;
-    const intensityMap = {1:'轻微调整语序和用词，保持原意', 2:'大幅度改写，改变表达方式和结构', 3:'完全重构，只保留核心观点};
+    const intensityMap = {1:'轻微调整语序和用词，保持原意', 2:'大幅度改写，改变表达方式和结构', 3:'完全重构，只保留核心观点'};
     showLoading('正在改写...');
     try {
         const result = await callAI(
