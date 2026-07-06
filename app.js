@@ -4,7 +4,7 @@ const State = {
     apiConfig: {
         base: localStorage.getItem('api_base') || '',
         key: localStorage.getItem('api_key') || '',
-        model: localStorage.getItem('api_model') || 'gpt-4o-mini'
+        model: localStorage.getItem('api_model') || 'qwen-turbo'
     },
     works: JSON.parse(localStorage.getItem('works') || '[]')
 };
@@ -49,7 +49,7 @@ function loadApiConfig() {
 function saveApiConfig() {
     const base = document.getElementById('apiBase').value.trim().replace(/\/+$/, '');
     const key = document.getElementById('apiKey').value.trim();
-    const model = document.getElementById('modelName').value.trim() || 'gpt-4o-mini';
+    const model = document.getElementById('modelName').value.trim() || 'qwen-turbo';
     State.apiConfig.base = base;
     State.apiConfig.key = key;
     State.apiConfig.model = model;
