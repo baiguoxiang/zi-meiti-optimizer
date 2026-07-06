@@ -1,0 +1,626 @@
+﻿<!DOCTYPE html>
+<html lang=\"zh-CN\">
+<head>
+    <meta charset=\"UTF-8\">
+    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no\">
+    <title>自媒体运营大师</title>
+    <link rel=\"stylesheet\" href=\"style.css\">
+    <link rel=\"stylesheet\" href=\"https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css\">
+</head>
+<body>
+    <!-- 状态栏 -->
+    <div class=\"status-bar\">
+        <span id=\"statusTime\"></span>
+        <div class=\"status-icons\">
+            <i class=\"fas fa-signal\"></i>
+            <i class=\"fas fa-wifi\"></i>
+            <i class=\"fas fa-battery-full\"></i>
+        </div>
+    </div>
+
+    <!-- 手机外壳 -->
+    <div class=\"phone-frame\">
+        <div class=\"phone-notch\"></div>
+        
+        <!-- 主页面 -->
+        <div class=\"page active\" id=\"page-home\">
+            <div class=\"header\">
+                <div class=\"header-top\">
+                    <div class=\"logo-area\">
+                        <div class=\"logo-icon\">
+                            <i class=\"fas fa-rocket\"></i>
+                        </div>
+                        <div>
+                            <h1>自媒体运营大师</h1>
+                            <p>AI驱动的全栈内容创作工具</p>
+                        </div>
+                    </div>
+                    <button class=\"profile-btn\" onclick=\"navigateTo('profile')\">
+                        <i class=\"fas fa-user-circle\"></i>
+                    </button>
+                </div>
+                
+                <!-- 搜索框 -->
+                <div class=\"search-box\">
+                    <i class=\"fas fa-search\"></i>
+                    <input type=\"text\" placeholder=\"搜索功能...\">
+                </div>
+            </div>
+
+            <!-- 轮播Banner -->
+            <div class=\"banner-carousel\">
+                <div class=\"banner-slide active\" style=\"background: linear-gradient(135deg, #6C5CE7, #A29BFE);\">
+                    <div class=\"banner-content\">
+                        <h2>🚀 AI赋能内容创作</h2>
+                        <p>一键生成爆款文案、视频脚本、营销内容</p>
+                        <button class=\"banner-cta\">开始使用</button>
+                    </div>
+                </div>
+                <div class=\"banner-slide\" style=\"background: linear-gradient(135deg, #00B894, #55EFC4);\">
+                    <div class=\"banner-content\">
+                        <h2>🎬 视频创作神器</h2>
+                        <p>智能生成视频脚本+自动配音+数字人</p>
+                        <button class=\"banner-cta\">立即体验</button>
+                    </div>
+                </div>
+                <div class=\"banner-slide\" style=\"background: linear-gradient(135deg, #E17055, #FAB1A0);\">
+                    <div class=\"banner-content\">
+                        <h2>📊 数据分析洞察</h2>
+                        <p>竞品分析、热点追踪、趋势预测</p>
+                        <button class=\"banner-cta\">查看数据</button>
+                    </div>
+                </div>
+                <div class=\"banner-dots\">
+                    <span class=\"dot active\" onclick=\"goToSlide(0)\"></span>
+                    <span class=\"dot\" onclick=\"goToSlide(1)\"></span>
+                    <span class=\"dot\" onclick=\"goToSlide(2)\"></span>
+                </div>
+            </div>
+
+            <!-- 功能卡片网格 -->
+            <div class=\"features-section\">
+                <div class=\"section-header\">
+                    <h3>全部功能</h3>
+                    <span class=\"more-link\">更多 <i class=\"fas fa-chevron-right\"></i></span>
+                </div>
+                <div class=\"feature-grid\">
+                    <div class=\"feature-card\" onclick=\"navigateTo('video-download')\">
+                        <div class=\"feature-icon video-icon\">
+                            <i class=\"fas fa-download\"></i>
+                        </div>
+                        <span class=\"feature-name\">视频下载</span>
+                        <span class=\"feature-desc\">下载各平台视频</span>
+                    </div>
+                    <div class=\"feature-card\" onclick=\"navigateTo('copy-extract')\">
+                        <div class=\"feature-icon extract-icon\">
+                            <i class=\"fas fa-file-alt\"></i>
+                        </div>
+                        <span class=\"feature-name\">文案提取</span>
+                        <span class=\"feature-desc\">视频转文字稿</span>
+                    </div>
+                    <div class=\"feature-card\" onclick=\"navigateTo('competitor-analysis')\">
+                        <div class=\"feature-icon analysis-icon\">
+                            <i class=\"fas fa-chart-line\"></i>
+                        </div>
+                        <span class=\"feature-name\">对标分析</span>
+                        <span class=\"feature-desc\">竞品深度分析</span>
+                    </div>
+                    <div class=\"feature-card\" onclick=\"navigateTo('smart-image')\">
+                        <div class=\"feature-icon image-icon\">
+                            <i class=\"fas fa-image\"></i>
+                        </div>
+                        <span class=\"feature-name\">智能图片</span>
+                        <span class=\"feature-desc\">AI生成配图</span>
+                    </div>
+                    <div class=\"feature-card\" onclick=\"navigateTo('text-audio')\">
+                        <div class=\"feature-icon audio-icon\">
+                            <i class=\"fas fa-headphones\"></i>
+                        </div>
+                        <span class=\"feature-name\">文生音频</span>
+                        <span class=\"feature-desc\">文字转语音</span>
+                    </div>
+                    <div class=\"feature-card\" onclick=\"navigateTo('copy-rewrite')\">
+                        <div class=\"feature-icon rewrite-icon\">
+                            <i class=\"fas fa-pen-fancy\"></i>
+                        </div>
+                        <span class=\"feature-name\">文案二创</span>
+                        <span class=\"feature-desc\">原创度提升</span>
+                    </div>
+                    <div class=\"feature-card\" onclick=\"navigateTo('digital-human')\">
+                        <div class=\"feature-icon digital-icon\">
+                            <i class=\"fas fa-robot\"></i>
+                        </div>
+                        <span class=\"feature-name\">数字人</span>
+                        <span class=\"feature-desc\">虚拟主播生成</span>
+                    </div>
+                    <div class=\"feature-card\" onclick=\"navigateTo('image-text')\">
+                        <div class=\"feature-icon texticon-icon\">
+                            <i class=\"fas fa-file-image\"></i>
+                        </div>
+                        <span class=\"feature-name\">图文生成</span>
+                        <span class=\"feature-desc\">自动生成图文笔记</span>
+                    </div>
+                    <div class=\"feature-card\" onclick=\"navigateTo('news')\">
+                        <div class=\"feature-icon news-icon\">
+                            <i class=\"fas fa-newspaper\"></i>
+                        </div>
+                        <span class=\"feature-name\">资讯获取</span>
+                        <span class=\"feature-desc\">热点资讯聚合</span>
+                    </div>
+                    <div class=\"feature-card\" onclick=\"navigateTo('script-gen')\">
+                        <div class=\"feature-icon script-icon\">
+                            <i class=\"fas fa-video\"></i>
+                        </div>
+                        <span class=\"feature-name\">视频脚本</span>
+                        <span class=\"feature-desc\">爆款脚本生成</span>
+                    </div>
+                    <div class=\"feature-card\" onclick=\"navigateTo('copy-gen')\">
+                        <div class=\"feature-icon copygen-icon\">
+                            <i class=\"fas fa-quote-right\"></i>
+                        </div>
+                        <span class=\"feature-name\">文案生成</span>
+                        <span class=\"feature-desc\">多平台文案创作</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 底部导航 -->
+            <div class=\"bottom-nav\">
+                <div class=\"nav-item active\" onclick=\"navigateTo('home')\">
+                    <i class=\"fas fa-home\"></i>
+                    <span>首页</span>
+                </div>
+                <div class=\"nav-item\" onclick=\"navigateTo('my-works')\">
+                    <i class=\"fas fa-folder-open\"></i>
+                    <span>我的作品</span>
+                </div>
+                <div class=\"nav-item\" onclick=\"navigateTo('profile')\">
+                    <i class=\"fas fa-user\"></i>
+                    <span>我的</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- API配置页面 -->
+        <div class=\"page\" id=\"page-profile\">
+            <div class=\"page-header\">
+                <button class=\"back-btn\" onclick=\"navigateTo('home')\">
+                    <i class=\"fas fa-arrow-left\"></i>
+                </button>
+                <h2>设置</h2>
+                <div style=\"width: 36px;\"></div>
+            </div>
+            <div class=\"page-content\">
+                <div class=\"profile-info\">
+                    <div class=\"avatar\">
+                        <i class=\"fas fa-user-circle\"></i>
+                    </div>
+                    <h3>自媒体运营大师</h3>
+                    <p>AI驱动的内容创作助手</p>
+                </div>
+
+                <div class=\"settings-section\">
+                    <h4><i class=\"fas fa-key\"></i> API 配置</h4>
+                    <div class=\"setting-item\">
+                        <label>OpenAI API 地址</label>
+                        <input type=\"text\" id=\"apiBase\" placeholder=\"https://api.openai.com 或兼容API地址\" value=\"\">
+                        <small>支持 OpenAI / 硅基流动 / 智谱 / 任意 OpenAI 兼容接口</small>
+                    </div>
+                    <div class=\"setting-item\">
+                        <label>OpenAI API Key</label>
+                        <input type=\"password\" id=\"apiKey\" placeholder=\"sk-xxxxxxxxxxxxxxxx\">
+                    </div>
+                    <div class=\"setting-item\">
+                        <label>模型名称</label>
+                        <input type=\"text\" id=\"modelName\" placeholder=\"gpt-4o-mini\" value=\"gpt-4o-mini\">
+                    </div>
+                    <button class=\"save-btn\" onclick=\"saveApiConfig()\">保存配置</button>
+                    <div class=\"api-status\" id=\"apiStatus\"></div>
+                </div>
+
+                <div class=\"settings-section\">
+                    <h4><i class=\"fas fa-info-circle\"></i> 使用说明</h4>
+                    <div class=\"help-text\">
+                        <p><strong>免费API推荐：</strong></p>
+                        <ul>
+                            <li>硅基流动：<code>https://api.siliconflow.cn/v1</code> （注册送额度）</li>
+                            <li>智谱AI：<code>https://open.bigmodel.cn/api/paas/v4</code> （新用户有免费额度）</li>
+                            <li>Bard API：<code>https://bard.googleapis.com/v1</code></li>
+                        </ul>
+                        <p><strong>无需API的功能：</strong></p>
+                        <ul>
+                            <li>文生音频 - 使用Edge TTS（完全免费）</li>
+                            <li>智能图片 - 使用Pollinations.ai（完全免费）</li>
+                            <li>视频下载 - 直接解析URL</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class=\"settings-section\">
+                    <h4><i class=\"fas fa-cloud-download-alt\"></i> 数据管理</h4>
+                    <button class=\"clear-btn\" onclick=\"clearAllData()\">清除所有本地数据</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 视频下载 -->
+        <div class=\"page\" id=\"page-video-download\">
+            <div class=\"page-header\">
+                <button class=\"back-btn\" onclick=\"navigateTo('home')\"><i class=\"fas fa-arrow-left\"></i></button>
+                <h2>视频下载</h2>
+                <div style=\"width:36px\"></div>
+            </div>
+            <div class=\"page-content\">
+                <div class=\"input-group\">
+                    <label>粘贴视频链接</label>
+                    <input type=\"text\" id=\"videoUrl\" placeholder=\"抖音/快手/小红书/微博视频链接\">
+                </div>
+                <div class=\"platform-tags\">
+                    <span class=\"tag\" onclick=\"document.getElementById('videoUrl').value='https://v.douyin.com/xxx'\">抖音</span>
+                    <span class=\"tag\" onclick=\"document.getElementById('videoUrl').value='https://kuaishou.com/xxx'\">快手</span>
+                    <span class=\"tag\" onclick=\"document.getElementById('videoUrl').value='https://xiaohongshu.com/xxx'\">小红书</span>
+                    <span class=\"tag\" onclick=\"document.getElementById('videoUrl').value='https://weibo.com/xxx'\">微博</span>
+                </div>
+                <button class=\"action-btn\" onclick=\"downloadVideo()\">
+                    <i class=\"fas fa-download\"></i> 解析并下载
+                </button>
+                <div class=\"result-area\" id=\"videoResult\"></div>
+            </div>
+        </div>
+
+        <!-- 文案提取 -->
+        <div class=\"page\" id=\"page-copy-extract\">
+            <div class=\"page-header\">
+                <button class=\"back-btn\" onclick=\"navigateTo('home')\"><i class=\"fas fa-arrow-left\"></i></button>
+                <h2>文案提取</h2>
+                <div style=\"width:36px\"></div>
+            </div>
+            <div class=\"page-content\">
+                <div class=\"input-group\">
+                    <label>输入视频描述或话题</label>
+                    <textarea id=\"extractTopic\" rows=\"3\" placeholder=\"例如：美食教程-红烧肉的做法\"></textarea>
+                </div>
+                <button class=\"action-btn\" onclick=\"extractCopy()\">
+                    <i class=\"fas fa-file-alt\"></i> 提取文案
+                </button>
+                <div class=\"result-area\" id=\"extractResult\">
+                    <div class=\"result-header\">
+                        <span>提取结果</span>
+                        <button class=\"copy-btn\" onclick=\"copyResult('extractResult')\"><i class=\"fas fa-copy\"></i> 复制</button>
+                    </div>
+                    <div class=\"result-content\" id=\"extractContent\"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 对标分析 -->
+        <div class=\"page\" id=\"page-competitor-analysis\">
+            <div class=\"page-header\">
+                <button class=\"back-btn\" onclick=\"navigateTo('home')\"><i class=\"fas fa-arrow-left\"></i></button>
+                <h2>对标分析</h2>
+                <div style=\"width:36px\"></div>
+            </div>
+            <div class=\"page-content\">
+                <div class=\"input-group\">
+                    <label>输入账号名称或领域</label>
+                    <input type=\"text\" id=\"accountName\" placeholder=\"例如：美食达人小王\">
+                </div>
+                <div class=\"input-group\">
+                    <label>选择分析维度</label>
+                    <div class=\"checkbox-group\">
+                        <label><input type=\"checkbox\" checked> 内容风格</label>
+                        <label><input type=\"checkbox\" checked> 选题方向</label>
+                        <label><input type=\"checkbox\" checked> 发布频率</label>
+                        <label><input type=\"checkbox\" checked> 互动数据</label>
+                    </div>
+                </div>
+                <button class=\"action-btn\" onclick=\"analyzeCompetitor()\">
+                    <i class=\"fas fa-chart-line\"></i> 开始分析
+                </button>
+                <div class=\"result-area\" id=\"analysisResult\"></div>
+            </div>
+        </div>
+
+        <!-- 智能图片 -->
+        <div class=\"page\" id=\"page-smart-image\">
+            <div class=\"page-header\">
+                <button class=\"back-btn\" onclick=\"navigateTo('home')\"><i class=\"fas fa-arrow-left\"></i></button>
+                <h2>智能图片</h2>
+                <div style=\"width:36px\"></div>
+            </div>
+            <div class=\"page-content\">
+                <div class=\"input-group\">
+                    <label>描述你想要的图片</label>
+                    <textarea id=\"imagePrompt\" rows=\"3\" placeholder=\"例如：一只可爱的猫咪在阳光下睡觉\"></textarea>
+                </div>
+                <div class=\"input-group\">
+                    <label>图片风格</label>
+                    <select id=\"imageStyle\">
+                        <option value=\"realistic\">写实</option>
+                        <option value=\"cartoon\">卡通</option>
+                        <option value=\"anime\">动漫</option>
+                        <option value=\"watercolor\">水彩</option>
+                        <option value=\"oil painting\">油画</option>
+                        <option value=\"minimalist\">极简</option>
+                    </select>
+                </div>
+                <button class=\"action-btn\" onclick=\"generateImage()\">
+                    <i class=\"fas fa-image\"></i> 生成图片
+                </button>
+                <div class=\"result-area\" id=\"imageResult\">
+                    <div class=\"image-preview\">
+                        <img id=\"generatedImage\" src=\"\" alt=\"生成的图片\">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 文生音频 -->
+        <div class=\"page\" id=\"page-text-audio\">
+            <div class=\"page-header\">
+                <button class=\"back-btn\" onclick=\"navigateTo('home')\"><i class=\"fas fa-arrow-left\"></i></button>
+                <h2>文生音频</h2>
+                <div style=\"width:36px\"></div>
+            </div>
+            <div class=\"page-content\">
+                <div class=\"input-group\">
+                    <label>输入文本内容</label>
+                    <textarea id=\"ttsText\" rows=\"4\" placeholder=\"输入要转换为语音的文字内容...\"></textarea>
+                </div>
+                <div class=\"input-group\">
+                    <label>选择声音</label>
+                    <select id=\"ttsVoice\">
+                        <option value=\"zh-CN-XiaoxiaoNeural\">晓晓 - 温柔女声</option>
+                        <option value=\"zh-CN-YunxiNeural\">云希 - 年轻男声</option>
+                        <option value=\"zh-CN-YunjianNeural\">云建 - 成熟男声</option>
+                        <option value=\"zh-CN-XiaoyiNeural\">晓艺 - 活泼女声</option>
+                        <option value=\"zh-CN-YunyangNeural\">云扬 - 新闻男声</option>
+                        <option value=\"zh-CN-XiaochenNeural\">晓陈 - 沉稳女声</option>
+                    </select>
+                </div>
+                <div class=\"input-group\">
+                    <label>语速：<span id=\"speedValue\">1.0</span>x</label>
+                    <input type=\"range\" id=\"ttsSpeed\" min=\"0.5\" max=\"2.0\" step=\"0.1\" value=\"1.0\" oninput=\"document.getElementById('speedValue').textContent=this.value\">
+                </div>
+                <button class=\"action-btn\" onclick=\"generateAudio()\">
+                    <i class=\"fas fa-headphones\"></i> 生成音频
+                </button>
+                <div class=\"result-area\" id=\"audioResult\">
+                    <audio id=\"audioPlayer\" controls style=\"width:100%\"></audio>
+                </div>
+            </div>
+        </div>
+
+        <!-- 文案二创 -->
+        <div class=\"page\" id=\"page-copy-rewrite\">
+            <div class=\"page-header\">
+                <button class=\"back-btn\" onclick=\"navigateTo('home')\"><i class=\"fas fa-arrow-left\"></i></button>
+                <h2>文案二创</h2>
+                <div style=\"width:36px\"></div>
+            </div>
+            <div class=\"page-content\">
+                <div class=\"input-group\">
+                    <label>输入原始文案</label>
+                    <textarea id=\"originalCopy\" rows=\"5\" placeholder=\"粘贴需要二次创作的文案...\"></textarea>
+                </div>
+                <div class=\"input-group\">
+                    <label>改写方向</label>
+                    <select id=\"rewriteDirection\">
+                        <option value=\"increase-originality\">提高原创度</option>
+                        <option value=\"simplify\">简化内容</option>
+                        <option value=\"enrich\">丰富细节</option>
+                        <option value=\"change-tone\">改变语气</option>
+                        <option value=\"adapt-platform\">适配平台</option>
+                    </select>
+                </div>
+                <button class=\"action-btn\" onclick=\"rewriteCopy()\">
+                    <i class=\"fas fa-pen-fancy\"></i> 开始改写
+                </button>
+                <div class=\"result-area\" id=\"rewriteResult\">
+                    <div class=\"result-header\">
+                        <span>改写结果</span>
+                        <button class=\"copy-btn\" onclick=\"copyResult('rewriteContent')\"><i class=\"fas fa-copy\"></i> 复制</button>
+                    </div>
+                    <div class=\"result-content\" id=\"rewriteContent\"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 数字人 -->
+        <div class=\"page\" id=\"page-digital-human\">
+            <div class=\"page-header\">
+                <button class=\"back-btn\" onclick=\"navigateTo('home')\"><i class=\"fas fa-arrow-left\"></i></button>
+                <h2>数字人</h2>
+                <div style=\"width:36px\"></div>
+            </div>
+            <div class=\"page-content\">
+                <div class=\"input-group\">
+                    <label>输入播报文案</label>
+                    <textarea id=\"digitalHumanText\" rows=\"4\" placeholder=\"输入数字人播报的文字内容...\"></textarea>
+                </div>
+                <div class=\"input-group\">
+                    <label>选择形象</label>
+                    <select id=\"digitalHumanAvatar\">
+                        <option value=\"business\">商务人士</option>
+                        <option value=\"teacher\">知识博主</option>
+                        <option value=\"casual\">休闲达人</option>
+                    </select>
+                </div>
+                <button class=\"action-btn\" onclick=\"generateDigitalHuman()\">
+                    <i class=\"fas fa-robot\"></i> 生成数字人视频
+                </button>
+                <div class=\"result-area\" id=\"digitalHumanResult\">
+                    <div class=\"placeholder-result\">
+                        <i class=\"fas fa-video\"></i>
+                        <p>数字人视频生成中...</p>
+                        <small>注：数字人视频需要接入专业API服务，当前版本提供文案+音频预览</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 图文生成 -->
+        <div class=\"page\" id=\"page-image-text\">
+            <div class=\"page-header\">
+                <button class=\"back-btn\" onclick=\"navigateTo('home')\"><i class=\"fas fa-arrow-left\"></i></button>
+                <h2>图文生成</h2>
+                <div style=\"width:36px\"></div>
+            </div>
+            <div class=\"page-content\">
+                <div class=\"input-group\">
+                    <label>输入主题</label>
+                    <input type=\"text\" id=\"imageTextTopic\" placeholder=\"例如：上海周末好去处\">
+                </div>
+                <div class=\"input-group\">
+                    <label>目标平台</label>
+                    <select id=\"targetPlatform\">
+                        <option value=\"xiaohongshu\">小红书</option>
+                        <option value=\"weibo\">微博</option>
+                        <option value=\"douyin\">抖音</option>
+                        <option value=\"wechat\">微信公众号</option>
+                    </select>
+                </div>
+                <button class=\"action-btn\" onclick=\"generateImageText()\">
+                    <i class=\"fas fa-file-image\"></i> 生成图文
+                </button>
+                <div class=\"result-area\" id=\"imageTextResult\"></div>
+            </div>
+        </div>
+
+        <!-- 资讯获取 -->
+        <div class=\"page\" id=\"page-news\">
+            <div class=\"page-header\">
+                <button class=\"back-btn\" onclick=\"navigateTo('home')\"><i class=\"fas fa-arrow-left\"></i></button>
+                <h2>资讯获取</h2>
+                <div style=\"width:36px\"></div>
+            </div>
+            <div class=\"page-content\">
+                <div class=\"input-group\">
+                    <label>输入关注领域</label>
+                    <input type=\"text\" id=\"newsTopic\" placeholder=\"例如：人工智能、新能源汽车\">
+                </div>
+                <button class=\"action-btn\" onclick=\"fetchNews()\">
+                    <i class=\"fas fa-newspaper\"></i> 获取资讯
+                </button>
+                <div class=\"result-area\" id=\"newsResult\"></div>
+            </div>
+        </div>
+
+        <!-- 视频脚本 -->
+        <div class=\"page\" id=\"page-script-gen\">
+            <div class=\"page-header\">
+                <button class=\"back-btn\" onclick=\"navigateTo('home')\"><i class=\"fas fa-arrow-left\"></i></button>
+                <h2>视频脚本</h2>
+                <div style=\"width:36px\"></div>
+            </div>
+            <div class=\"page-content\">
+                <div class=\"input-group\">
+                    <label>视频主题</label>
+                    <input type=\"text\" id=\"scriptTopic\" placeholder=\"例如：产品测评-蓝牙耳机\">
+                </div>
+                <div class=\"input-group\">
+                    <label>视频类型</label>
+                    <select id=\"scriptType\">
+                        <option value=\"review\">测评类</option>
+                        <option value=\"tutorial\">教程类</option>
+                        <option value=\"vlog\">Vlog类</option>
+                        <option value=\"promotional\">营销类</option>
+                        <option value=\"story\">故事类</option>
+                    </select>
+                </div>
+                <div class=\"input-group\">
+                    <label>视频时长</label>
+                    <select id=\"scriptDuration\">
+                        <option value=\"30\">30秒</option>
+                        <option value=\"60\" selected>1分钟</option>
+                        <option value=\"180\">3分钟</option>
+                        <option value=\"300\">5分钟</option>
+                    </select>
+                </div>
+                <button class=\"action-btn\" onclick=\"generateScript()\">
+                    <i class=\"fas fa-video\"></i> 生成脚本
+                </button>
+                <div class=\"result-area\" id=\"scriptResult\">
+                    <div class=\"result-header\">
+                        <span>脚本内容</span>
+                        <button class=\"copy-btn\" onclick=\"copyResult('scriptContent')\"><i class=\"fas fa-copy\"></i> 复制</button>
+                    </div>
+                    <div class=\"result-content\" id=\"scriptContent\"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 文案生成 -->
+        <div class=\"page\" id=\"page-copy-gen\">
+            <div class=\"page-header\">
+                <button class=\"back-btn\" onclick=\"navigateTo('home')\"><i class=\"fas fa-arrow-left\"></i></button>
+                <h2>文案生成</h2>
+                <div style=\"width:36px\"></div>
+            </div>
+            <div class=\"page-content\">
+                <div class=\"input-group\">
+                    <label>文案类型</label>
+                    <select id=\"copyType\">
+                        <option value=\"product\">产品文案</option>
+                        <option value=\"social\">社交媒体</option>
+                        <option value=\"ad\">广告文案</option>
+                        <option value=\"email\">邮件营销</option>
+                        <option value=\"seo\">SEO文章</option>
+                    </select>
+                </div>
+                <div class=\"input-group\">
+                    <label>产品/服务介绍</label>
+                    <textarea id=\"copyProduct\" rows=\"3\" placeholder=\"描述你的产品或服务...\"></textarea>
+                </div>
+                <div class=\"input-group\">
+                    <label>目标受众</label>
+                    <input type=\"text\" id=\"copyAudience\" placeholder=\"例如：25-35岁职场女性\">
+                </div>
+                <button class=\"action-btn\" onclick=\"generateCopy()\">
+                    <i class=\"fas fa-quote-right\"></i> 生成文案
+                </button>
+                <div class=\"result-area\" id=\"copyResult\">
+                    <div class=\"result-header\">
+                        <span>文案内容</span>
+                        <button class=\"copy-btn\" onclick=\"copyResult('copyContent')\"><i class=\"fas fa-copy\"></i> 复制</button>
+                    </div>
+                    <div class=\"result-content\" id=\"copyContent\"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 我的作品 -->
+        <div class=\"page\" id=\"page-my-works\">
+            <div class=\"page-header\">
+                <button class=\"back-btn\" onclick=\"navigateTo('home')\"><i class=\"fas fa-arrow-left\"></i></button>
+                <h2>我的作品</h2>
+                <div style=\"width:36px\"></div>
+            </div>
+            <div class=\"page-content\">
+                <div class=\"works-tabs\">
+                    <span class=\"tab active\" onclick=\"switchWorksTab(this, 'all')\">全部</span>
+                    <span class=\"tab\" onclick=\"switchWorksTab(this, 'script')\">脚本</span>
+                    <span class=\"tab\" onclick=\"switchWorksTab(this, 'copy')\">文案</span>
+                    <span class=\"tab\" onclick=\"switchWorksTab(this, 'image')\">图片</span>
+                    <span class=\"tab\" onclick=\"switchWorksTab(this, 'audio')\">音频</span>
+                </div>
+                <div class=\"works-list\" id=\"worksList\">
+                    <div class=\"empty-state\">
+                        <i class=\"fas fa-folder-open\"></i>
+                        <p>暂无作品</p>
+                        <small>使用上方功能创作你的第一个作品吧！</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 加载遮罩 -->
+    <div class=\"loading-overlay\" id=\"loadingOverlay\">
+        <div class=\"spinner\"></div>
+        <p id=\"loadingText\">正在处理...</p>
+    </div>
+
+    <script src=\"app.js\"></script>
+</body>
+</html>
