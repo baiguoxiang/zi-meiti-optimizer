@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(updateTime, 60000);
     loadApiConfig();
     renderWorks();
+    preloadAvatarImages();
     loadAvatarPhotos();
 });
 
@@ -405,6 +406,12 @@ function handleAvatarUpload(event) {
         
         if (matchedAvatar) {
             State.avatarPhotos[matchedAvatar] = base64;
+            // ???????
+            const tempImg = new Image();
+            tempImg.src = base64;
+            State.avatarImageObjects = State.avatarImageObjects || {};
+            State.avatarImageObjects[matchedAvatar] = tempImg;
+            
             localStorage.setItem("avatar_photos", JSON.stringify(State.avatarPhotos));
             updateAvatarDisplay(matchedAvatar, base64);
             showToast("✅ 已上传 " + matchedAvatar + " 的照片");
@@ -429,6 +436,18 @@ function updateAvatarDisplay(name, base64) {
 }
 
 // ===== 数字人生成 =====
+
+function preloadAvatarImages() {
+    if (!State.avatarImageObjects) State.avatarImageObjects = {};
+    for (const name in State.avatarPhotos) {
+        if (State.avatarPhotos[name] && !State.avatarImageObjects[name]) {
+            const img = new Image();
+            img.src = State.avatarPhotos[name];
+            State.avatarImageObjects[name] = img;
+        }
+    }
+}
+
 // ===== 数字人生成（简化可靠版）=====
 async function generateDigitalHuman() {
     const text = document.getElementById('digitalHumanText').value.trim();
@@ -542,202 +561,154 @@ function splitScript(script, maxWidth) {
     return result;
 }
 
-function drawAvatarPortrait(ctx, avatarName, canvasW, canvasH, progress, elapsed) {
-    const aname = avatarName.replace(/[-\s]/g, "");
+// ===== ???????????????=====
+async function drawAvatarPortrait(ctx, avatarName, canvasW, canvasH, elapsed) {
     const colors = getAvatarColors(avatarName);
-    
-    // ?????????????????
-    if (State.avatarPhotos[avatarName]) {
-        const img = new Image();
-        img.src = State.avatarPhotos[avatarName];
-        const cx = canvasW / 2;
-        const cy = canvasH * 0.32;
-        const radius = Math.min(canvasW, canvasH) * 0.18;
-        
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-        ctx.closePath();
-        ctx.clip();
-        
-        if (img.complete && img.naturalWidth > 0) {
-            const imgRatio = img.naturalWidth / img.naturalHeight;
-            let drawW, drawH;
-            if (imgRatio > 1) {
-                drawH = radius * 2;
-                drawW = drawH * imgRatio;
-            } else {
-                drawW = radius * 2;
-                drawH = drawW / imgRatio;
-            }
-            ctx.drawImage(img, cx - drawW/2, cy - drawH/2, drawW, drawH);
-        }
-        ctx.restore();
-        
-        // ??
-        const glow = ctx.createRadialGradient(cx, cy, radius * 0.8, cx, cy, radius * 1.5);
-        glow.addColorStop(0, colors.primary + "30");
-        glow.addColorStop(1, "transparent");
-        ctx.fillStyle = glow;
-        ctx.beginPath();
-        ctx.arc(cx, cy, radius * 1.5, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // ????
-        ctx.fillStyle = "rgba(0,0,0,0.5)";
-        ctx.beginPath();
-        ctx.roundRect(cx - 30, cy + radius + 8, 60, 24, 12);
-        ctx.fill();
-        ctx.fillStyle = "#ffffff";
-        ctx.font = "bold 12px sans-serif";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText(avatarName, cx, cy + radius + 20);
-        
-        // ??????
-        const bodyTopY = cy + radius + 40;
-        const bodyH = canvasH * 0.25;
-        const bodyW = canvasW * 0.4;
-        const bodyGrad = ctx.createLinearGradient(cx - bodyW/2, bodyTopY, cx + bodyW/2, bodyTopY + bodyH);
-        bodyGrad.addColorStop(0, colors.primary);
-        bodyGrad.addColorStop(1, colors.secondary);
-        ctx.fillStyle = bodyGrad;
-        ctx.beginPath();
-        ctx.roundRect(cx - bodyW/2, bodyTopY, bodyW, bodyH, [20, 20, 0, 0]);
-        ctx.fill();
-        
-        return;
-    }
     const cx = canvasW / 2;
-    const cy = canvasH * 0.4;
+    const cy = canvasH * 0.35;
+    const hasPhoto = State.avatarPhotos && State.avatarPhotos[avatarName];
     
-    // 背景光晕效果
-    const glowR = Math.max(canvasW, canvasH) * 0.5;
-    const glow = ctx.createRadialGradient(cx, cy - canvasH * 0.05, 0, cx, cy - canvasH * 0.05, glowR);
-    glow.addColorStop(0, colors.primary + '20');
-    glow.addColorStop(1, 'transparent');
-    ctx.fillStyle = glow;
-    ctx.fillRect(0, 0, canvasW, canvasH);
+    // ????????
+    let img = null;
+    if (hasPhoto && State.avatarImageObjects && State.avatarImageObjects[avatarName]) {
+        img = State.avatarImageObjects[avatarName];
+    }
     
-    // 绘制人物剪影 - 优雅半身像
-    const headR = canvasW * 0.1;
-    const shoulderW = canvasW * 0.45;
-    const shoulderH = canvasH * 0.22;
-    const bodyTopY = cy + headR * 0.8;
-    
-    // 身体（西装/衬衫样式）
-    ctx.save();
-    const bodyGrad = ctx.createLinearGradient(cx - shoulderW/2, bodyTopY, cx + shoulderW/2, bodyTopY + shoulderH);
+    // 1. ??????????
+    const bodyTopY = cy + 50;
+    const bodyH = canvasH * 0.28;
+    const bodyW = canvasW * 0.42;
+    const bodyGrad = ctx.createLinearGradient(cx - bodyW/2, bodyTopY, cx + bodyW/2, bodyTopY + bodyH);
     bodyGrad.addColorStop(0, colors.primary);
     bodyGrad.addColorStop(1, colors.secondary);
     ctx.fillStyle = bodyGrad;
     
-    // 肩部曲线
+    // ????
     ctx.beginPath();
-    ctx.moveTo(cx - shoulderW/2, bodyTopY + shoulderH);
-    ctx.quadraticCurveTo(cx - shoulderW/2 - 10, bodyTopY, cx - shoulderW/4, bodyTopY - 5);
-    // 领口
-    ctx.lineTo(cx - 8, bodyTopY + 15);
-    ctx.lineTo(cx, bodyTopY + 8);
-    ctx.lineTo(cx + 8, bodyTopY + 15);
-    ctx.lineTo(cx + shoulderW/4, bodyTopY - 5);
-    ctx.quadraticCurveTo(cx + shoulderW/2 + 10, bodyTopY, cx + shoulderW/2, bodyTopY + shoulderH);
-    ctx.lineTo(cx + shoulderW/2, bodyTopY + shoulderH + canvasH * 0.08);
-    ctx.lineTo(cx - shoulderW/2, bodyTopY + shoulderH + canvasH * 0.08);
+    ctx.moveTo(cx - bodyW/2, bodyTopY + bodyH);
+    ctx.quadraticCurveTo(cx - bodyW/2 - 5, bodyTopY + 20, cx - bodyW/3, bodyTopY);
+    ctx.lineTo(cx - 10, bodyTopY + 15);
+    ctx.lineTo(cx, bodyTopY + 5);
+    ctx.lineTo(cx + 10, bodyTopY + 15);
+    ctx.lineTo(cx + bodyW/3, bodyTopY);
+    ctx.quadraticCurveTo(cx + bodyW/2 + 5, bodyTopY + 20, cx + bodyW/2, bodyTopY + bodyH);
     ctx.closePath();
     ctx.fill();
-    ctx.restore();
     
-    // 头部（圆形）
-    const headGrad = ctx.createRadialGradient(cx - headR*0.3, cy - headR*0.3, 0, cx, cy, headR);
-    headGrad.addColorStop(0, '#FDEBD0');
-    headGrad.addColorStop(1, '#F5CBA7');
-    ctx.fillStyle = headGrad;
+    // ????V?
+    ctx.fillStyle = "#ffffff";
     ctx.beginPath();
-    ctx.arc(cx, cy, headR, 0, Math.PI * 2);
+    ctx.moveTo(cx - 12, bodyTopY + 10);
+    ctx.lineTo(cx, bodyTopY + 35);
+    ctx.lineTo(cx + 12, bodyTopY + 10);
+    ctx.closePath();
     ctx.fill();
     
-    // 头发（根据性别和头像名称变化）
-    ctx.fillStyle = (aname === '依菱' || aname === '沐沐' || aname === '一诺' || aname === '林延' || aname === '管管' || aname === '江宁') 
-        ? '#4A3728' : '#2D2D2D';
-    ctx.beginPath();
-    ctx.arc(cx, cy - 4, headR + 3, Math.PI, Math.PI * 2);
-    ctx.fill();
+    // 2. ????
+    const headR = Math.min(canvasW, canvasH) * 0.13;
     
-    // 发型细节
-    if (avatarName === '依菱' || avatarName === '沐沐' || avatarName === '一诺') {
-        // 长发
+    if (img && img.complete && img.naturalWidth > 0) {
+        // ??????????
+        ctx.save();
         ctx.beginPath();
-        ctx.ellipse(cx - headR - 2, cy + 5, 6, headR * 0.8, 0, 0, Math.PI * 2);
+        ctx.arc(cx, cy, headR, 0, Math.PI * 2);
+        ctx.closePath();
+        ctx.clip();
+        
+        // ????
+        const imgRatio = img.naturalWidth / img.naturalHeight;
+        let dw, dh;
+        if (imgRatio > 1) {
+            dh = headR * 2;
+            dw = dh * imgRatio;
+        } else {
+            dw = headR * 2;
+            dh = dw / imgRatio;
+        }
+        ctx.drawImage(img, cx - dw/2, cy - dh/2, dw, dh);
+        ctx.restore();
+        
+        // ??????
+        ctx.strokeStyle = colors.primary + "80";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(cx, cy, headR + 2, 0, Math.PI * 2);
+        ctx.stroke();
+    } else {
+        // ??????????
+        const headGrad = ctx.createRadialGradient(cx - headR*0.3, cy - headR*0.3, 0, cx, cy, headR);
+        headGrad.addColorStop(0, "#FDEBD0");
+        headGrad.addColorStop(1, "#F5CBA7");
+        ctx.fillStyle = headGrad;
+        ctx.beginPath();
+        ctx.arc(cx, cy, headR, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // ??
+        ctx.fillStyle = "#3D2B1F";
+        ctx.beginPath();
+        ctx.arc(cx, cy - 5, headR + 2, Math.PI, Math.PI * 2);
+        ctx.fill();
+        
+        // ??
+        ctx.fillStyle = "#333";
+        const eyeY = cy + 2;
+        const eyeSpacing = headR * 0.3;
+        const blinkPhase = Math.sin(elapsed * 0.5);
+        const eyeH = blinkPhase > 0.95 ? 1 : headR * 0.1;
+        ctx.beginPath();
+        ctx.ellipse(cx - eyeSpacing, eyeY, headR * 0.1, eyeH, 0, 0, Math.PI * 2);
         ctx.fill();
         ctx.beginPath();
-        ctx.ellipse(cx + headR + 2, cy + 5, 6, headR * 0.8, 0, 0, Math.PI * 2);
+        ctx.ellipse(cx + eyeSpacing, eyeY, headR * 0.1, eyeH, 0, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // ????????
+        const mouthY = cy + headR * 0.35;
+        const mouthOpen = Math.abs(Math.sin(elapsed * 3)) * 3 + 1;
+        ctx.fillStyle = "#E53E3E";
+        ctx.beginPath();
+        ctx.ellipse(cx, mouthY, headR * 0.12, mouthOpen, 0, 0, Math.PI * 2);
         ctx.fill();
     }
     
-    // 眼睛
-    ctx.fillStyle = '#333';
-    const eyeY = cy + 2;
-    const eyeSpacing = headR * 0.3;
-    const blinkPhase = Math.sin(elapsed * 0.5);
-    const eyeH = blinkPhase > 0.95 ? 1 : headR * 0.1;
-    ctx.beginPath();
-    ctx.ellipse(cx - eyeSpacing, eyeY, headR * 0.1, eyeH, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.ellipse(cx + eyeSpacing, eyeY, headR * 0.1, eyeH, 0, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // 嘴巴（说话动画）
-    const mouthY = cy + headR * 0.4;
-    const mouthOpen = Math.abs(Math.sin(elapsed * 3)) * 4 + 1;
-    ctx.fillStyle = '#E53E3E';
-    ctx.beginPath();
-    ctx.ellipse(cx, mouthY, headR * 0.15, mouthOpen, 0, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // 名字标签
-    ctx.fillStyle = 'rgba(255,255,255,0.85)';
-    ctx.font = 'bold ' + (canvasW * 0.045) + 'px "Microsoft YaHei", sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    
-    // 名字背景
+    // 3. ????
+    ctx.fillStyle = "rgba(0,0,0,0.6)";
     const nameText = avatarName;
-    const nameW = ctx.measureText(nameText).width + 20;
-    const nameBgX = cx - nameW/2;
-    const nameBgY = bodyTopY + shoulderH + canvasH * 0.04;
-    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.font = "bold " + (headR * 0.7) + "px sans-serif";
+    const nameW = ctx.measureText(nameText).width;
+    const nameBgX = cx - nameW/2 - 12;
+    const nameBgY = bodyTopY + bodyH - 10;
     ctx.beginPath();
-    ctx.roundRect(nameBgX, nameBgY, nameW, canvasW * 0.06, 6);
+    ctx.roundRect(nameBgX, nameBgY, nameW + 24, headR * 0.7 + 8, 6);
     ctx.fill();
     
-    ctx.fillStyle = '#ffffff';
-    ctx.fillText(nameText, cx, nameBgY + canvasW * 0.03);
+    ctx.fillStyle = "#ffffff";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(nameText, cx, nameBgY + (headR * 0.7 + 8) / 2);
 }
-
-// 渲染带音频的数字人视频
-// 渲染数字人视频（纯 Canvas，无声但视觉效果完整）
+// ????????Canvas ?? + ???
 async function renderDigitalHumanVideoWithAudio(avatar, script, ratio, audioBuffer) {
     return new Promise((resolve) => {
-        const canvas = document.createElement('canvas');
+        const canvas = document.createElement("canvas");
         const dims = getRatioDimensions(ratio);
         canvas.width = dims.w;
         canvas.height = dims.h;
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext("2d");
         
         const startTime = Date.now();
-        const totalChars = script.replace(/[^\\u4e00-\\u9fa5a-zA-Z]/g, '').length;
+        const totalChars = script.replace(/[^\u4e00-\u9fa5a-zA-Z]/g, "").length;
         const totalDuration = Math.max(8, Math.min(totalChars * 0.25, 120));
         
         const stream = canvas.captureStream(30);
-        const recorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+        const recorder = new MediaRecorder(stream, { mimeType: "video/webm" });
         const chunks = [];
         recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
-        recorder.onstop = () => resolve(new Blob(chunks, { type: 'video/webm' }));
+        recorder.onstop = () => resolve(new Blob(chunks, { type: "video/webm" }));
         recorder.start();
         
-        const lines = splitScript(script, canvas.width * 0.75);
+        const textLines = splitScript(script, canvas.width * 0.75);
         let currentLine = 0;
         let lineCharIndex = 0;
         
@@ -745,73 +716,65 @@ async function renderDigitalHumanVideoWithAudio(avatar, script, ratio, audioBuff
             const elapsed = (Date.now() - startTime) / 1000;
             if (elapsed >= totalDuration + 1) { recorder.stop(); return; }
             
-            // 渐变背景
             const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-            grad.addColorStop(0, '#0f0c29');
-            grad.addColorStop(0.5, '#1a1a3e');
-            grad.addColorStop(1, '#24243e');
+            grad.addColorStop(0, "#0f0c29");
+            grad.addColorStop(0.5, "#1a1a3e");
+            grad.addColorStop(1, "#24243e");
             ctx.fillStyle = grad;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            // 粒子效果
-            for (let i = 0; i < 15; i++) {
-                const px = (Math.sin(elapsed * 0.3 + i * 1.7) * 0.5 + 0.5) * canvas.width;
-                const py = (Math.cos(elapsed * 0.2 + i * 2.1) * 0.5 + 0.5) * canvas.height;
-                ctx.fillStyle = 'rgba(108, 92, 231, 0.15)';
+            for (let i = 0; i < 20; i++) {
+                const px = (Math.sin(elapsed * 0.2 + i * 1.3) * 0.5 + 0.5) * canvas.width;
+                const py = (Math.cos(elapsed * 0.15 + i * 1.7) * 0.5 + 0.5) * canvas.height * 0.6;
+                ctx.fillStyle = "rgba(147, 130, 225, 0.12)";
                 ctx.beginPath();
-                ctx.arc(px, py, 2, 0, Math.PI * 2);
+                ctx.arc(px, py, 1.5, 0, Math.PI * 2);
                 ctx.fill();
             }
             
-            // 绘制数字人
-            drawAvatarPortrait(ctx, avatar, canvas.width, canvas.height, elapsed, elapsed);
+            drawAvatarPortrait(ctx, avatar, canvas.width, canvas.height, elapsed);
             
-            // 字幕区域
             const subtitleY = canvas.height * 0.62;
             const subtitleH = canvas.height * 0.33;
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
+            ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
             ctx.beginPath();
             ctx.roundRect(canvas.width * 0.04, subtitleY, canvas.width * 0.92, subtitleH, 12);
             ctx.fill();
             
-            // 字幕文字
-            ctx.fillStyle = '#ffffff';
-            ctx.textAlign = 'left';
+            ctx.fillStyle = "#ffffff";
+            ctx.textAlign = "left";
             const fontSize = Math.max(14, canvas.width * 0.035);
             ctx.font = fontSize + 'px "Microsoft YaHei", "PingFang SC", sans-serif';
             
-            const currentScript = lines[currentLine] || '';
+            const currentScript = textLines[currentLine] || "";
             const displayText = currentScript.substring(0, Math.max(0, lineCharIndex));
-            ctx.shadowColor = 'rgba(0,0,0,0.5)';
+            ctx.shadowColor = "rgba(0,0,0,0.5)";
             ctx.shadowBlur = 4;
             ctx.fillText(displayText, canvas.width * 0.08, subtitleY + subtitleH * 0.45);
-            ctx.shadowColor = 'transparent';
+            ctx.shadowColor = "transparent";
             
-            // 进度条
             const progress = Math.min(elapsed / totalDuration, 1);
             const barY = subtitleY + subtitleH - 16;
-            ctx.fillStyle = 'rgba(255,255,255,0.15)';
+            ctx.fillStyle = "rgba(255,255,255,0.15)";
             ctx.beginPath();
             ctx.roundRect(canvas.width * 0.06, barY, canvas.width * 0.88, 4, 2);
             ctx.fill();
             const progGrad = ctx.createLinearGradient(canvas.width * 0.06, 0, canvas.width * 0.94, 0);
-            progGrad.addColorStop(0, '#667eea');
-            progGrad.addColorStop(1, '#764ba2');
+            progGrad.addColorStop(0, "#667eea");
+            progGrad.addColorStop(1, "#764ba2");
             ctx.fillStyle = progGrad;
             ctx.beginPath();
             ctx.roundRect(canvas.width * 0.06, barY, canvas.width * 0.88 * progress, 4, 2);
             ctx.fill();
             
-            // 计时器
             const secs = Math.floor(elapsed);
-            ctx.fillStyle = 'rgba(255,255,255,0.5)';
-            ctx.font = (fontSize * 0.7) + 'px monospace';
-            ctx.textAlign = 'right';
-            ctx.fillText((Math.floor(secs/60).toString().padStart(2,'0') + ':' + (secs%60).toString().padStart(2,'0')), canvas.width * 0.94, barY - 6);
+            ctx.fillStyle = "rgba(255,255,255,0.5)";
+            ctx.font = (fontSize * 0.7) + "px monospace";
+            ctx.textAlign = "right";
+            ctx.fillText((Math.floor(secs/60).toString().padStart(2,"0") + ":" + (secs%60).toString().padStart(2,"0")), canvas.width * 0.94, barY - 6);
             
-            // 更新字幕
             if (elapsed > 0.3 && Math.floor(elapsed / 1.8) > currentLine) {
-                currentLine = Math.min(Math.floor(elapsed / 1.8), lines.length - 1);
+                currentLine = Math.min(Math.floor(elapsed / 1.8), textLines.length - 1);
                 lineCharIndex = 0;
             }
             lineCharIndex = Math.min(lineCharIndex + 2, currentScript.length);
@@ -822,7 +785,6 @@ async function renderDigitalHumanVideoWithAudio(avatar, script, ratio, audioBuff
         drawFrame();
     });
 }
-
 
 function getRatioDimensions(ratio) {
     switch(ratio) {
@@ -958,6 +920,7 @@ function clearAllData() {
     loadAvatarPhotos();
     showToast('✅ 所有数据已清除');
 }
+
 
 
 
