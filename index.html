@@ -344,6 +344,7 @@
                 <div class="form-group"><label>模型名称</label><input type="text" id="modelName" value="qwen-turbo"></div>
                 <button class="gradient-btn" onclick="saveApiConfig()">保存配置</button>
                 <div class="api-status" id="apiStatus"></div>
+            </div>
             <div class="settings-card"><h4><i class="fas fa-robot"></i> 硅基流动 API</h4>
                 <div class="form-group"><label>API 地址</label><input type="text" id="sfApiBase" placeholder="https://api.siliconflow.cn/v1"></div>
                 <div class="form-group"><label>API Key</label><input type="password" id="sfApiKey" placeholder="sk-xxxxxxxx"></div>
@@ -351,21 +352,23 @@
                 <button class="gradient-btn" onclick="saveSiliconFlowConfig()">保存配置</button>
                 <div class="api-status" id="sfApiStatus"></div>
             </div>
-            </div>
             <div class="settings-card"><h4><i class="fas fa-image"></i> 图片生成</h4>
                 <div class="setting-item"><span>默认使用 Pollinations.ai（免费）</span><i class="fas fa-check-circle" style="color:#00B894"></i></div>
             </div>
             <div class="settings-card"><h4><i class="fas fa-music"></i> 音频生成</h4>
                 <div class="setting-item"><span>默认使用 TTSMaker（免费）</span><i class="fas fa-check-circle" style="color:#00B894"></i></div>
             </div>
-            <div class="settings-card"><h4><i class="fas fa-robot"></i> 数字人</h4><div class="setting-item"><span>纯前端 Canvas 合成（免费）</span><i class="fas fa-check-circle" style="color:#00B894"></i></div><div class="setting-item"><span>Edge TTS 配音</span><i class="fas fa-check-circle" style="color:#00B894"></i></div><div class="setting-item"><span>AI 文案优化</span><i class="fas fa-check-circle" style="color:#00B894"></i></div></div>
+            <div class="settings-card"><h4><i class="fas fa-robot"></i> 数字人</h4>
+                <div class="setting-item"><span>🔧 硅基流动 API 驱动</span><i class="fas fa-cog" style="color:#6C5CE7"></i></div>
+                <div class="setting-item"><span>✅ 专业数字人图像生成</span><i class="fas fa-check-circle" style="color:#00B894"></i></div>
+                <div class="setting-item"><span>🔑 需要在设置中配置 API Key</span><i class="fas fa-key" style="color:#FFA500"></i></div>
+            </div>
             <div class="settings-card"><h4><i class="fas fa-info-circle"></i> 关于</h4>
-                <div class="about-info"><p><strong>自媒体运营大师 Pro</strong></p><p>版本：v2.0</p><p>支持：文案提取 / 对标分析 / 文案二创 / 智能图片 / 图文生成 / 视频下载 / 文生音频 / 数字人</p></div>
+                <div class="about-info"><p><strong>自媒体运营大师 Pro</strong></p><p>版本：v2.1</p><p>支持：文案提取 / 对标分析 / 文案二创 / 智能图片 / 图文生成 / 文生音频 / 数字人（硅基流动 API）</p></div>
             </div>
             <button class="danger-btn" onclick="clearAllData()" style="margin-top:20px"><i class="fas fa-trash"></i> 清除所有数据</button>
         </div>
     </div>
-
     <div class="bottom-nav" id="bottomNav">
         <div class="nav-item active" onclick="navigateTo('home')" data-page="home"><i class="fas fa-home"></i><span>首页</span></div>
         <div class="nav-item" onclick="navigateTo('copy-extract')" data-page="copy-extract"><i class="fas fa-file-alt"></i><span>文案</span></div>
