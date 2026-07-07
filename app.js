@@ -12,6 +12,11 @@ const State = {
         base: localStorage.getItem('api_base') || 'https://dashscope.aliyuncs.com/compatible-mode/v1',
         key: localStorage.getItem('api_key') || '',
         model: localStorage.getItem('api_model') || 'qwen-turbo'
+    },
+    siliconFlow: {
+        base: localStorage.getItem('sf_base') || 'https://api.siliconflow.cn/v1',
+        key: localStorage.getItem('sf_key') || '',
+        model: localStorage.getItem('sf_model') || 'Qwen/Qwen2.5-72B-Instruct'
     }
 };
 
@@ -20,6 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateTime();
     setInterval(updateTime, 60000);
     loadApiConfig();
+    loadSiliconFlowConfig();
     renderWorks();
     preloadAvatarImages();
     loadAvatarPhotos();
@@ -916,6 +922,7 @@ function clearAllData() {
     State.apiConfig = {base:'',key:'',model:'qwen-turbo'};
     State.works = [];
     loadApiConfig();
+    loadSiliconFlowConfig();
     renderWorks();
     loadAvatarPhotos();
     showToast('✅ 所有数据已清除');
@@ -937,4 +944,90 @@ function clearAllData() {
 
 
 
+
+
+function loadSiliconFlowConfig() {
+    const b = document.getElementById('sfApiBase');
+    const k = document.getElementById('sfApiKey');
+    const m = document.getElementById('sfModelName');
+    if (b) b.value = State.siliconFlow.base;
+    if (k) k.value = State.siliconFlow.key;
+    if (m) m.value = State.siliconFlow.model;
+}
+
+function saveSiliconFlowConfig() {
+    const base = document.getElementById('sfApiBase').value.trim().replace(/\/+$/,'');
+    const key = document.getElementById('sfApiKey').value.trim();
+    const model = document.getElementById('sfModelName').value.trim() || 'Qwen/Qwen2.5-72B-Instruct';
+    State.siliconFlow.base = base;
+    State.siliconFlow.key = key;
+    State.siliconFlow.model = model;
+    localStorage.setItem('sf_base', base);
+    localStorage.setItem('sf_key', key);
+    localStorage.setItem('sf_model', model);
+    const s = document.getElementById('sfApiStatus');
+    if (s) {
+        if (key) { s.textContent = '配置已保存'; s.className = 'api-status success'; }
+        else { s.textContent = '请填写API Key'; s.className = 'api-status error'; }
+    }
+    showToast(key ? '硅基流动配置已保存' : '请填写API Key');
+}
+
+async function generateDigitalHumanSF() {
+    const text = document.getElementById('digitalHumanText').value.trim();
+    if (!text) return showToast('请输入播报文案');
+    const avatar = State.selectedAvatar;
+    const ratio = document.getElementById('dhRatio').value;
+    const duration = document.getElementById('dhDuration').value;
+    showLoading('正在调用硅基流动 API...');
+    try {
+        const config = State.siliconFlow;
+        if (!config.key) {
+            hideLoading();
+            showToast('请先在设置中配置硅基流动 API Key');
+            return;
+        }
+        const url = config.base.replace(/\/+$/,'') + '/v1/images/generations';
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {'Authorization': 'Bearer ' + config.key, 'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                prompt: 'Digital human: ' + avatar + '. Text: ' + text.substring(0, 200),
+                model: config.model, n: 1,
+                size: ratio === '9:16' ? '1080x1920' : ratio === '16:9' ? '1920x1080' : '1024x1024'
+            })
+        });
+        if (!response.ok) throw new Error('API请求失败(' + response.status + ')');
+        const result = await response.json();
+        const imageUrl = result.data && result.data[0] ? result.data[0].url : '';
+        document.getElementById('digitalHumanResult').style.display = 'block';
+        let html = '<div style="padding:16px;">';
+        html += '<div style="text-align:center;margin-bottom:16px;">';
+        html += '<div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#00B894,#55E6C1);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">';
+        html += '<i class="fas fa-check-circle" style="font-size:28px;color:white;"></i></div>';
+        html += '<p style="font-size:16px;font-weight:600;">数字人图像生成成功！</p></div>';
+        html += '<div style="background:#F5F6FA;border-radius:12px;padding:14px;margin-bottom:12px;">';
+        html += '<p style="font-size:12px;color:#999;margin-bottom:6px;">数字人模板</p>';
+        html += '<p style="font-size:14px;font-weight:600;">' + avatar + '</p>';
+        html += '<p style="font-size:12px;color:#999;margin-top:4px;">比例：' + ratio + ' | 时长：约' + duration + '秒</p></div>';
+        if (imageUrl) {
+            html += '<div style="background:linear-gradient(135deg,#F3EEFF,#FFE8F0);border-radius:12px;padding:14px;margin-bottom:12px;">';
+            html += '<p style="font-size:14px;font-weight:600;margin-bottom:8px;">生成图像</p>';
+            html += '<img src="' + imageUrl + '" style="width:100%;border-radius:10px;margin-bottom:10px;">';
+            html += '<a href="' + imageUrl + '" download="数字人_' + avatar + '.png" class="gradient-btn" style="text-decoration:none;display:block;text-align:center;">下载图像</a></div>';
+        }
+        html += '<div style="background:#E8F5E9;border-radius:12px;padding:12px;margin-bottom:12px;">';
+        html += '<p style="font-size:13px;color:#2E7D32;">提示：当前生成的是静态图像。如需视频，建议使用腾讯智影、百度智能云等专业 API。</p></div>';
+        html += '<div style="display:flex;gap:8px;">';
+        html += '<button class="action-btn" onclick="saveWork(digitalhuman,' + avatar.replace(/'/g, "'") + ')"><i class="fas fa-save"></i> 保存</button></div></div>';
+        document.getElementById('digitalHumanResult').innerHTML = html;
+        showToast('数字人图像生成成功！');
+    } catch(e) {
+        console.error('Error:', e);
+        document.getElementById('digitalHumanResult').style.display = 'block';
+        document.getElementById('digitalHumanResult').innerHTML = buildDHError(e.message, text, avatar);
+        showToast('生成失败：' + e.message);
+    }
+    hideLoading();
+}
 
