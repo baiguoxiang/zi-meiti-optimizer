@@ -229,7 +229,7 @@
     <div class="page" id="digital-human">
         <div class="page-header"><button class="back-btn" onclick="navigateTo('home')"><i class="fas fa-arrow-left"></i></button><h2>数字人</h2><div style="width:36px"></div></div>
         <div class="page-body">
-            <div class="info-card"><i class="fas fa-info-circle"></i><span>选择数字人模板，输入文案即可生成口播视频</span></div>
+            <div class="info-card"><i class="fas fa-info-circle"></i><span>选择数字人模板，输入文案即可生成口播视频（全部使用阿里百炼 API）</span></div>
             <div class="section-title">选择数字人模板</div>
             <div class="avatar-grid" id="avatarGrid">
                 <div class="avatar-card active" onclick="selectAvatar(this,'商务男士-张总')"><div class="avatar-img" style="background:linear-gradient(135deg,#667eea,#764ba2)"><i class="fas fa-user-tie"></i></div><span>张总</span><small>商务精英</small></div>
@@ -249,7 +249,7 @@
                     <select id="dhDuration"><option value="30">30秒</option><option value="60" selected>60秒</option><option value="120">2分钟</option><option value="180">3分钟</option></select>
                 </div>
             </div>
-            <button class="gradient-btn" onclick="generateDigitalHuman()"><i class="fas fa-video"></i> 生成数字人视频</button>
+            <button class="gradient-btn" onclick="generateDigitalHuman()"><i class="fas fa-video"></i> 一键生成数字人视频</button>
             <div class="result-area" id="digitalHumanResult" style="display:none"></div>
         </div>
     </div>
@@ -286,7 +286,7 @@
             <div class="settings-card"><h4><i class="fas fa-music"></i> 音频生成</h4>
                 <div class="setting-item"><span>默认使用 TTSMaker（免费）</span><i class="fas fa-check-circle" style="color:#00B894"></i></div>
             </div>
-            <div class="settings-card"><h4><i class="fas fa-robot"></i> 数字人</h4><div class="setting-item"><span>使用 Edge TTS（免费）</span><i class="fas fa-check-circle" style="color:#00B894"></i></div><div class="setting-item"><span>支持 Canva / 剪映 / D-ID</span><i class="fas fa-check-circle" style="color:#00B894"></i></div></div>
+            <div class="settings-card"><h4><i class="fas fa-robot"></i> 数字人</h4><div class="setting-item"><span>纯前端 Canvas 合成（免费）</span><i class="fas fa-check-circle" style="color:#00B894"></i></div><div class="setting-item"><span>Edge TTS 配音</span><i class="fas fa-check-circle" style="color:#00B894"></i></div><div class="setting-item"><span>AI 文案优化</span><i class="fas fa-check-circle" style="color:#00B894"></i></div></div>
             <div class="settings-card"><h4><i class="fas fa-info-circle"></i> 关于</h4>
                 <div class="about-info"><p><strong>自媒体运营大师 Pro</strong></p><p>版本：v2.0</p><p>支持：文案提取 / 对标分析 / 文案二创 / 智能图片 / 图文生成 / 视频下载 / 文生音频 / 数字人</p></div>
             </div>
@@ -307,5 +307,7 @@
 <script src="app.js"></script>
 </body>
 </html>
+
+
 
 
