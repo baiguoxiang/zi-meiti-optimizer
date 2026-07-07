@@ -1,5 +1,6 @@
 ﻿// ===== 全局状态 =====
 const State = {
+    avatarPhotos: JSON.parse(localStorage.getItem('avatar_photos') || '{}'),
     currentPage: 'home',
     selectedTemplate: '爆款公式',
     selectedVoice: '温馨女声',
@@ -20,6 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(updateTime, 60000);
     loadApiConfig();
     renderWorks();
+    loadAvatarPhotos();
 });
 
 function updateTime() {
@@ -377,6 +379,55 @@ function generateAudio() {
 
 
 // ===== 8. 数字人视频生成（纯前端 Canvas 方案）=====
+
+// ===== 上传真人照片 =====
+function handleAvatarUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const base64 = e.target.result;
+        const fileName = file.name.replace(/\.[^/.]+$/, "").toLowerCase();
+        let matchedAvatar = "";
+        const avatarNames = ["依菱","沐沐","明轩","林靖","一诺","林延","管管","江宁","林浩"];
+        
+        for (const name of avatarNames) {
+            if (fileName.includes(name.toLowerCase())) {
+                matchedAvatar = name;
+                break;
+            }
+        }
+        
+        if (!matchedAvatar) {
+            matchedAvatar = prompt("请输入对应的头像名称 (依菱/沐沐/明轩/林靖/一诺/林延/管管/江宁/林浩):", "依菱");
+        }
+        
+        if (matchedAvatar) {
+            State.avatarPhotos[matchedAvatar] = base64;
+            localStorage.setItem("avatar_photos", JSON.stringify(State.avatarPhotos));
+            updateAvatarDisplay(matchedAvatar, base64);
+            showToast("✅ 已上传 " + matchedAvatar + " 的照片");
+        }
+    };
+    reader.readAsDataURL(file);
+    event.target.value = "";
+}
+
+function updateAvatarDisplay(name, base64) {
+    const cards = document.querySelectorAll(".avatar-card");
+    cards.forEach(card => {
+        const onclickStr = card.getAttribute("onclick") || "";
+        const match = onclickStr.match(/'([^']+)'/);
+        if (match && match[1] === name) {
+            const imgDiv = card.querySelector(".avatar-img");
+            if (imgDiv) {
+                imgDiv.innerHTML = '<img src="' + base64 + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">';
+            }
+        }
+    });
+}
+
 // ===== 数字人生成 =====
 // ===== 数字人生成（简化可靠版）=====
 async function generateDigitalHuman() {
@@ -494,6 +545,69 @@ function splitScript(script, maxWidth) {
 function drawAvatarPortrait(ctx, avatarName, canvasW, canvasH, progress, elapsed) {
     const aname = avatarName.replace(/[-\s]/g, "");
     const colors = getAvatarColors(avatarName);
+    
+    // ?????????????????
+    if (State.avatarPhotos[avatarName]) {
+        const img = new Image();
+        img.src = State.avatarPhotos[avatarName];
+        const cx = canvasW / 2;
+        const cy = canvasH * 0.32;
+        const radius = Math.min(canvasW, canvasH) * 0.18;
+        
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+        ctx.closePath();
+        ctx.clip();
+        
+        if (img.complete && img.naturalWidth > 0) {
+            const imgRatio = img.naturalWidth / img.naturalHeight;
+            let drawW, drawH;
+            if (imgRatio > 1) {
+                drawH = radius * 2;
+                drawW = drawH * imgRatio;
+            } else {
+                drawW = radius * 2;
+                drawH = drawW / imgRatio;
+            }
+            ctx.drawImage(img, cx - drawW/2, cy - drawH/2, drawW, drawH);
+        }
+        ctx.restore();
+        
+        // ??
+        const glow = ctx.createRadialGradient(cx, cy, radius * 0.8, cx, cy, radius * 1.5);
+        glow.addColorStop(0, colors.primary + "30");
+        glow.addColorStop(1, "transparent");
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius * 1.5, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // ????
+        ctx.fillStyle = "rgba(0,0,0,0.5)";
+        ctx.beginPath();
+        ctx.roundRect(cx - 30, cy + radius + 8, 60, 24, 12);
+        ctx.fill();
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "bold 12px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(avatarName, cx, cy + radius + 20);
+        
+        // ??????
+        const bodyTopY = cy + radius + 40;
+        const bodyH = canvasH * 0.25;
+        const bodyW = canvasW * 0.4;
+        const bodyGrad = ctx.createLinearGradient(cx - bodyW/2, bodyTopY, cx + bodyW/2, bodyTopY + bodyH);
+        bodyGrad.addColorStop(0, colors.primary);
+        bodyGrad.addColorStop(1, colors.secondary);
+        ctx.fillStyle = bodyGrad;
+        ctx.beginPath();
+        ctx.roundRect(cx - bodyW/2, bodyTopY, bodyW, bodyH, [20, 20, 0, 0]);
+        ctx.fill();
+        
+        return;
+    }
     const cx = canvasW / 2;
     const cy = canvasH * 0.4;
     
@@ -767,6 +881,7 @@ function saveWork(type, preview) {
     if (State.works.length > 50) State.works = State.works.slice(0, 50);
     localStorage.setItem('sm_works', JSON.stringify(State.works));
     renderWorks();
+    loadAvatarPhotos();
     showToast('✅ 已保存到作品管理');
 }
 
@@ -825,6 +940,7 @@ function deleteWork(id) {
     State.works = State.works.filter(w => w.id !== id);
     localStorage.setItem('sm_works', JSON.stringify(State.works));
     renderWorks();
+    loadAvatarPhotos();
     showToast('🗑️ 已删除');
 }
 
@@ -839,8 +955,11 @@ function clearAllData() {
     State.works = [];
     loadApiConfig();
     renderWorks();
+    loadAvatarPhotos();
     showToast('✅ 所有数据已清除');
 }
+
+
 
 
 

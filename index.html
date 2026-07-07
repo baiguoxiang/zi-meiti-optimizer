@@ -233,6 +233,7 @@
             <div class="info-card"><i class="fas fa-info-circle"></i><span>选择真人数字人模板，输入文案即可生成口播视频</span></div>
             <div class="section-title">选择数字人模板</div>
             <div class="avatar-grid" id="avatarGrid">
+                <!-- 上传按钮会动态插入 -->
                 <div class="avatar-card active" onclick="selectAvatar(this,'依菱')" data-photo="依菱">
                     <div class="avatar-img" style="background:linear-gradient(135deg,#f093fb,#f5576c);display:flex;align-items:center;justify-content:center;">
                         <i class="fas fa-female" style="font-size:32px;color:white;"></i>
@@ -296,8 +297,15 @@
                     <span>林浩</span>
                     <small>医生专家</small>
                 </div>
+            
+            <div style="text-align:center;margin:16px 0;">
+                <button class="gradient-btn" onclick="document.getElementById('avatarUploadInput').click()" style="font-size:13px;padding:8px 20px;">
+                    <i class="fas fa-camera"></i> 上传真人照片
+                </button>
+                <input type="file" id="avatarUploadInput" accept="image/*" style="display:none" onchange="handleAvatarUpload(event)">
+                <div id="uploadHint" style="font-size:11px;color:#999;margin-top:6px;">上传后会自动匹配对应头像</div>
             </div>
-            <div class="form-group"><label><i class="fas fa-font"></i> 播报文案</label>
+            <div class='form-group'><label><i class='fas fa-font'></i> 播报文案</label>
                 <textarea id="digitalHumanText" rows="6" placeholder="输入播报内容，建议100-500字..." oninput="updateCharCount('digitalHumanText','dhCharCount',2000)"></textarea>
                 <div class="char-count"><span id="dhCharCount">0</span>/2000</div>
             </div>
@@ -364,6 +372,8 @@
 <script src="app.js"></script>
 </body>
 </html>
+
+
 
 
 
