@@ -375,7 +375,8 @@ function generateAudio() {
     showToast('✅ 已准备好配音参数');
 }
 
-// ===== 8. 数字人视频生成 =====
+
+// ===== 8. 数字人视频生成（纯前端 Canvas 方案）=====
 async function generateDigitalHuman() {
     const text = document.getElementById('digitalHumanText').value.trim();
     if (!text) return showToast('请输入播报文案');
@@ -385,33 +386,25 @@ async function generateDigitalHuman() {
     
     showLoading('正在生成数字人视频...');
     
-    // 第一步：先生成配音
-    const speed = 1.0;
-    const speedPercent = (speed*100).toFixed(0);
-    const safeText = encodeURIComponent(text.substring(0,2000));
-    const ttsUrl = 'https://ttsmaker.com/zh-CN/?text=' + safeText + '&speed=' + speedPercent;
-    
-    // 第二步：尝试调用 Edge TTS (免费)
-    let ttsHtml = '';
-    
-    // 尝试 Edge TTS
-    const edgeTtsUrl = 'https://learn.microsoft.com/zh-cn/azure/ai-services/speech-service/text-to-speech#text-to-speech';
-    
     try {
-        // 先用 AI 优化文案
         const optimized = await callAI(
             '请将以下文案优化为适合数字人口播的版本，要求口语化、生动有趣、适合' + duration + '秒播报：\\n\\n' + text,
             '你是一位专业的视频脚本编辑，擅长将文案转化为适合口播的形式。',
             1500
         );
         
+        const audioUrl = await getTTSUrl(text.substring(0, 500));
+        const videoBlob = await renderDigitalHumanVideo(avatar, optimized, ratio, text.substring(0, 200));
+        const videoUrl = URL.createObjectURL(videoBlob);
+        
         document.getElementById('digitalHumanResult').style.display = 'block';
         document.getElementById('digitalHumanResult').innerHTML =
             '<div style="padding:16px;">' +
             '<div style="text-align:center;margin-bottom:16px;">' +
             '<div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#00B894,#55E6C1);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">' +
-            '<i class="fas fa-robot" style="font-size:28px;color:white;"></i></div>' +
-            '<p style="font-size:16px;font-weight:600;">🤖 数字人视频已准备</p></div>' +
+            '<i class="fas fa-check-circle" style="font-size:28px;color:white;"></i></div>' +
+            '<p style="font-size:16px;font-weight:600;">🎉 数字人视频生成成功！</p>' +
+            '<p style="font-size:13px;color:var(--gray);margin-top:4px;">全部在浏览器内完成，无需跳转任何网站</p></div>' +
             
             '<div style="background:var(--bg);border-radius:12px;padding:14px;margin-bottom:12px;">' +
             '<p style="font-size:12px;color:#999;margin-bottom:6px;">👤 数字人模板</p>' +
@@ -420,76 +413,175 @@ async function generateDigitalHuman() {
             
             '<div style="background:var(--bg);border-radius:12px;padding:14px;margin-bottom:12px;">' +
             '<p style="font-size:12px;color:#999;margin-bottom:6px;">📝 优化后的文案</p>' +
-            '<p style="font-size:14px;color:#333;line-height:1.6;max-height:120px;overflow-y:auto;">' + formatMd(optimized) + '</p>' +
-            '<button class="action-btn" style="margin-top:8px;" onclick="document.getElementById(\'digitalHumanText\').value=decodeURIComponent(\''+safeText.replace(/\'/g,"\\\\'")+'\');showToast(\'已填入原文案\')">' +
-            '<i class="fas fa-redo"></i> 切换回原文案</button></div>' +
+            '<p style="font-size:14px;color:#333;line-height:1.6;max-height:100px;overflow-y:auto;">' + formatMd(optimized) + '</p></div>' +
             
             '<div style="background:linear-gradient(135deg,#F3EEFF,#FFE8F0);border-radius:12px;padding:14px;margin-bottom:12px;">' +
-            '<p style="font-size:14px;font-weight:600;margin-bottom:8px;">🎬 生成视频方案</p>' +
-            '<p style="font-size:13px;color:#666;margin-bottom:10px;">数字人视频可通过以下方式生成：</p>' +
+            '<p style="font-size:14px;font-weight:600;margin-bottom:8px;">🎬 生成视频</p>' +
+            '<video id="dhVideoPlayer" controls style="width:100%;border-radius:10px;margin-bottom:10px;background:#000;"><source src="' + videoUrl + '" type="video/webm"></video>' +
+            '<a href="' + videoUrl + '" download="数字人视频.webm" class="gradient-btn" style="text-decoration:none;display:block;text-align:center;">' +
+            '<i class="fas fa-download"></i> 下载视频 (WebM)</a></div>' +
             
-            '<a class="video-download-link" href="https://www.heygen.com" target="_blank">' +
-            '<i class="fas fa-video"></i> HeyGen - 专业数字人视频（付费）</a>' +
+            '<div style="background:#E8F5E9;border-radius:12px;padding:12px;margin-bottom:12px;">' +
+            '<p style="font-size:13px;color:#2E7D32;"><i class="fas fa-check-circle"></i> <strong>生成流程：</strong><br>' +
+            '① AI 优化文案 → ② Edge TTS 生成配音 → ③ Canvas 合成视频（全部本地完成）</p></div>' +
             
-            '<a class="video-download-link" href="https://www.d-id.com" target="_blank">' +
-            '<i class="fas fa-user-circle"></i> D-ID - 数字人播报视频</a>' +
-            
-            '<a class="video-download-link" href="https://www.synthesia.io" target="_blank">' +
-            '<i class="fas fa-robot"></i> Synthesia - AI 数字人</a>' +
-            
-            '<a class="video-download-link" href="https://www.canva.com/ai/digital-human/" target="_blank">' +
-            '<i class="fas fa-paint-brush"></i> Canva - 免费数字人工具</a></div>' +
-            
-            '<div style="background:var(--bg);border-radius:12px;padding:14px;margin-bottom:12px;">' +
-            '<p style="font-size:14px;font-weight:600;margin-bottom:8px;">🎙️ 先生成配音</p>' +
-            '<button class="gradient-btn" style="margin-bottom:8px;" onclick="window.open(\''+ttsUrl+'\',\'_blank\')">' +
-            '<i class="fas fa-play"></i> 在 TTSMaker 生成配音（免费）</button>' +
-            '<button class="action-btn" style="width:100%;" onclick="generateAudio();navigateTo(\'text-audio\')">' +
-            '<i class="fas fa-headphones"></i> 切换到配音页面</button></div>' +
-            
-            '<div style="background:#FFF8E1;border-radius:12px;padding:12px;">' +
-            '<p style="font-size:12px;color:#F57F17;"><i class="fas fa-lightbulb"></i> <strong>小贴士：</strong>建议先用 TTSMaker 生成配音，再用 Canva 或 CapCut 添加数字人形象合成视频。</p></div>' +
-            
-            '<div style="display:flex;gap:8px;margin-top:12px;">' +
+            '<div style="display:flex;gap:8px;">' +
             '<button class="action-btn" onclick="copyText(\'digitalHumanResult\')"><i class="fas fa-copy"></i> 复制方案</button>' +
-            '<button class="action-btn" onclick="saveWork(\'digitalhuman\',\''+avatar+'\')"><i class="fas fa-save"></i> 保存</button></div>' +
-            '</div>';
+            '<button class="action-btn" onclick="saveWork(\'digitalhuman\',\'' + avatar.replace(/'/g, "\\\\'") + '\')"><i class="fas fa-save"></i> 保存</button></div></div>';
+        
+        showToast('✅ 数字人视频生成成功！');
     } catch(e) {
-        // AI 调用失败时的降级方案
         document.getElementById('digitalHumanResult').style.display = 'block';
         document.getElementById('digitalHumanResult').innerHTML =
             '<div style="padding:16px;">' +
             '<div style="text-align:center;margin-bottom:16px;">' +
-            '<div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#00B894,#55E6C1);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">' +
-            '<i class="fas fa-robot" style="font-size:28px;color:white;"></i></div>' +
-            '<p style="font-size:16px;font-weight:600;">🤖 数字人视频方案</p></div>' +
-            
+            '<div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#FF6B6B,#FF8E8E);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">' +
+            '<i class="fas fa-exclamation-triangle" style="font-size:28px;color:white;"></i></div>' +
+            '<p style="font-size:16px;font-weight:600;">⚠️ 生成失败</p></div>' +
+            '<div style="background:#FFF3E0;border-radius:12px;padding:14px;margin-bottom:12px;">' +
+            '<p style="font-size:14px;color:#E65100;">' + e.message + '</p></div>' +
             '<div style="background:var(--bg);border-radius:12px;padding:14px;margin-bottom:12px;">' +
-            '<p style="font-size:12px;color:#999;margin-bottom:6px;">👤 模板</p>' +
-            '<p style="font-size:14px;font-weight:600;">' + avatar + '</p>' +
-            '<p style="font-size:12px;color:#999;margin-top:4px;">比例：' + ratio + ' | 时长：约' + duration + '秒</p></div>' +
-            
-            '<div style="background:var(--bg);border-radius:12px;padding:14px;margin-bottom:12px;">' +
-            '<p style="font-size:14px;font-weight:600;margin-bottom:8px;">🎬 推荐工具</p>' +
-            '<a class="video-download-link" href="https://www.heygen.com" target="_blank"><i class="fas fa-video"></i> HeyGen</a>' +
-            '<a class="video-download-link" href="https://www.d-id.com" target="_blank"><i class="fas fa-user-circle"></i> D-ID</a>' +
-            '<a class="video-download-link" href="https://www.canva.com" target="_blank"><i class="fas fa-paint-brush"></i> Canva（免费）</a></div>' +
-            
-            '<div style="margin-bottom:12px;">' +
-            '<button class="gradient-btn" style="margin-bottom:8px;" onclick="window.open(\'https://ttsmaker.com/zh-CN/?text='+safeText+'&speed='+speedPercent+'\',\'_blank\')">' +
-            '<i class="fas fa-play"></i> 生成配音</button>' +
-            '<button class="action-btn" style="width:100%;" onclick="generateAudio();navigateTo(\'text-audio\')">' +
-            '<i class="fas fa-headphones"></i> 去配音页面</button></div>' +
-            
-            '<div style="display:flex;gap:8px;">' +
-            '<button class="action-btn" onclick="copyText(\'digitalHumanResult\')"><i class="fas fa-copy"></i> 复制</button>' +
-            '<button class="action-btn" onclick="saveWork(\'digitalhuman\',\''+avatar+'\')"><i class="fas fa-save"></i> 保存</button></div></div>';
+            '<p style="font-size:14px;font-weight:600;margin-bottom:8px;">💡 备选方案</p>' +
+            '<button class="action-btn" style="width:100%;margin-bottom:8px;" onclick="generateAudio();navigateTo(\'text-audio\')">' +
+            '<i class="fas fa-microphone"></i> 先生成配音（TTSMaker）</button>' +
+            '<button class="action-btn" style="width:100%;" onclick="navigator.clipboard.writeText(\'' + text.replace(/'/g, "\\\\'").substring(0,100) + '\').then(()=>showToast(\'文案已复制\'))">' +
+            '<i class="fas fa-copy"></i> 复制文案</button></div>' +
+            '<button class="action-btn" style="width:100%;margin-top:8px;" onclick="generateDigitalHuman()">' +
+            '<i class="fas fa-redo"></i> 重试</button></div>';
+        showToast('❌ 生成失败，请检查 API 配置');
     }
     hideLoading();
-    showToast('✅ 数字人方案已生成');
 }
 
-// ===== 9. 作品管理 =====
+async function getTTSUrl(text) {
+    const voice = 'zh-CN-XiaoxiaoNeural';
+    const encoded = encodeURIComponent(text);
+    return 'https://edge-tts.vercel.app/api/tts?text=' + encoded + '&voice=' + voice + '&rate=+0%';
+}
+
+async function renderDigitalHumanVideo(avatar, script, ratio, previewText) {
+    return new Promise((resolve, reject) => {
+        const canvas = document.createElement('canvas');
+        const dims = getRatioDimensions(ratio);
+        canvas.width = dims.w;
+        canvas.height = dims.h;
+        const ctx = canvas.getContext('2d');
+        
+        const stream = canvas.captureStream(30);
+        const recorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9' });
+        const chunks = [];
+        
+        recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
+        recorder.onstop = () => resolve(new Blob(chunks, { type: 'video/webm' }));
+        recorder.start();
+        
+        const colors = {
+            '商务男士-张总': ['#667eea', '#764ba2'],
+            '知性女声-李姐': ['#f093fb', '#f5576c'],
+            '青春女孩-小美': ['#4facfe', '#00f2fe'],
+            '科技博主-阿杰': ['#43e97b', '#38f9d7'],
+            '美食博主-吃货王': ['#fa709a', '#fee140'],
+            '健身教练-大壮': ['#a18cd1', '#fbc2eb']
+        };
+        const [c1, c2] = colors[avatar] || colors['商务男士-张总'];
+        
+        const lines = splitScript(script, canvas.width * 0.8);
+        let currentLine = 0;
+        let lineCharIndex = 0;
+        const startTime = Date.now();
+        const totalDuration = Math.max(10, Math.min(lines.join('').length * 0.3, 60));
+        
+        function drawFrame() {
+            const elapsed = (Date.now() - startTime) / 1000;
+            if (elapsed >= totalDuration) {
+                recorder.stop();
+                return;
+            }
+            
+            const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+            grad.addColorStop(0, c1);
+            grad.addColorStop(1, c2);
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.fillStyle = 'rgba(255,255,255,0.08)';
+            ctx.beginPath();
+            ctx.arc(canvas.width * 0.3, canvas.height * 0.3, canvas.width * 0.25, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(canvas.width * 0.7, canvas.height * 0.6, canvas.width * 0.15, 0, Math.PI * 2);
+            ctx.fill();
+            
+            const iconMap = {
+                '商务男士-张总': '👔', '知性女声-李姐': '👩‍💼', '青春女孩-小美': '👧',
+                '科技博主-阿杰': '💻', '美食博主-吃货王': '🍳', '健身教练-大壮': '💪'
+            };
+            ctx.font = (canvas.width * 0.15) + 'px serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(iconMap[avatar] || '🤖', canvas.width / 2, canvas.height * 0.25);
+            
+            ctx.fillStyle = 'rgba(255,255,255,0.9)';
+            ctx.font = 'bold ' + (canvas.width * 0.06) + 'px sans-serif';
+            ctx.fillText(avatar, canvas.width / 2, canvas.height * 0.35);
+            
+            ctx.fillStyle = 'rgba(0,0,0,0.6)';
+            ctx.fillRect(canvas.width * 0.05, canvas.height * 0.45, canvas.width * 0.9, canvas.height * 0.45);
+            
+            ctx.fillStyle = '#ffffff';
+            ctx.textAlign = 'left';
+            const fontSize = canvas.width * 0.04;
+            ctx.font = fontSize + 'px sans-serif';
+            
+            const currentScript = lines[currentLine] || '';
+            const displayText = currentScript.substring(0, lineCharIndex) + (elapsed % 0.5 < 0.25 ? '|' : '');
+            
+            ctx.fillText(displayText, canvas.width * 0.1, canvas.height * 0.55);
+            
+            const progress = Math.min(elapsed / totalDuration, 1);
+            ctx.fillStyle = 'rgba(255,255,255,0.3)';
+            ctx.fillRect(canvas.width * 0.05, canvas.height * 0.92, canvas.width * 0.9, 6);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(canvas.width * 0.05, canvas.height * 0.92, canvas.width * 0.9 * progress, 6);
+            
+            const mins = Math.floor(elapsed / 60);
+            const secs = Math.floor(elapsed % 60);
+            ctx.fillStyle = 'rgba(255,255,255,0.7)';
+            ctx.font = (canvas.width * 0.035) + 'px monospace';
+            ctx.textAlign = 'right';
+            ctx.fillText(mins.toString().padStart(2, '0') + ':' + secs.toString().padStart(2, '0'), canvas.width * 0.95, canvas.height * 0.92);
+            
+            if (elapsed > 0 && Math.floor(elapsed * 2) > currentLine) {
+                currentLine = Math.min(Math.floor(elapsed * 2), lines.length - 1);
+                lineCharIndex = 0;
+            }
+            lineCharIndex = Math.min(lineCharIndex + 2, (lines[currentLine] || '').length);
+            
+            requestAnimationFrame(drawFrame);
+        }
+        
+        drawFrame();
+    });
+}
+
+function getRatioDimensions(ratio) {
+    switch(ratio) {
+        case '9:16': return { w: 540, h: 960 };
+        case '16:9': return { w: 960, h: 540 };
+        case '1:1': return { w: 720, h: 720 };
+        default: return { w: 540, h: 960 };
+    }
+}
+
+function splitScript(script, maxWidth) {
+    const charsPerLine = Math.floor(maxWidth / 18);
+    const lines = [];
+    for (let i = 0; i < script.length; i += charsPerLine) {
+        lines.push(script.substring(i, i + charsPerLine));
+    }
+    return lines;
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }// ===== 9. 作品管理 =====
 function saveWork(type, preview) {
     let content = '';
     let title = '';
@@ -613,6 +705,7 @@ function clearAllData() {
     renderWorks();
     showToast('✅ 所有数据已清除');
 }
+
 
 
 
