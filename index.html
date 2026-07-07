@@ -227,17 +227,75 @@
 
     
     <div class="page" id="digital-human">
+
         <div class="page-header"><button class="back-btn" onclick="navigateTo('home')"><i class="fas fa-arrow-left"></i></button><h2>数字人</h2><div style="width:36px"></div></div>
         <div class="page-body">
-            <div class="info-card"><i class="fas fa-info-circle"></i><span>选择数字人模板，输入文案即可生成口播视频（全部使用阿里百炼 API）</span></div>
+            <div class="info-card"><i class="fas fa-info-circle"></i><span>选择真人数字人模板，输入文案即可生成口播视频</span></div>
             <div class="section-title">选择数字人模板</div>
             <div class="avatar-grid" id="avatarGrid">
-                <div class="avatar-card active" onclick="selectAvatar(this,'商务男士-张总')"><div class="avatar-img" style="background:linear-gradient(135deg,#667eea,#764ba2)"><i class="fas fa-user-tie"></i></div><span>张总</span><small>商务精英</small></div>
-                <div class="avatar-card" onclick="selectAvatar(this,'知性女声-李姐')"><div class="avatar-img" style="background:linear-gradient(135deg,#f093fb,#f5576c)"><i class="fas fa-user"></i></div><span>李姐</span><small>知性优雅</small></div>
-                <div class="avatar-card" onclick="selectAvatar(this,'青春女孩-小美')"><div class="avatar-img" style="background:linear-gradient(135deg,#4facfe,#00f2fe)"><i class="fas fa-user-graduate"></i></div><span>小美</span><small>青春活力</small></div>
-                <div class="avatar-card" onclick="selectAvatar(this,'科技博主-阿杰')"><div class="avatar-img" style="background:linear-gradient(135deg,#43e97b,#38f9d7)"><i class="fas fa-laptop-code"></i></div><span>阿杰</span><small>科技达人</small></div>
-                <div class="avatar-card" onclick="selectAvatar(this,'美食博主-吃货王')"><div class="avatar-img" style="background:linear-gradient(135deg,#fa709a,#fee140)"><i class="fas fa-utensils"></i></div><span>吃货王</span><small>美食推荐</small></div>
-                <div class="avatar-card" onclick="selectAvatar(this,'健身教练-大壮')"><div class="avatar-img" style="background:linear-gradient(135deg,#a18cd1,#fbc2eb)"><i class="fas fa-dumbbell"></i></div><span>大壮</span><small>健身教练</small></div>
+                <div class="avatar-card active" onclick="selectAvatar(this,'依菱')" data-photo="依菱">
+                    <div class="avatar-img" style="background:linear-gradient(135deg,#f093fb,#f5576c);display:flex;align-items:center;justify-content:center;">
+                        <i class="fas fa-female" style="font-size:32px;color:white;"></i>
+                    </div>
+                    <span>依菱</span>
+                    <small>商务女性</small>
+                </div>
+                <div class="avatar-card" onclick="selectAvatar(this,'沐沐')" data-photo="沐沐">
+                    <div class="avatar-img" style="background:linear-gradient(135deg,#4facfe,#00f2fe);display:flex;align-items:center;justify-content:center;">
+                        <i class="fas fa-female" style="font-size:32px;color:white;"></i>
+                    </div>
+                    <span>沐沐</span>
+                    <small>知性优雅</small>
+                </div>
+                <div class="avatar-card" onclick="selectAvatar(this,'明轩')" data-photo="明轩">
+                    <div class="avatar-img" style="background:linear-gradient(135deg,#667eea,#764ba2);display:flex;align-items:center;justify-content:center;">
+                        <i class="fas fa-male" style="font-size:32px;color:white;"></i>
+                    </div>
+                    <span>明轩</span>
+                    <small>商务精英</small>
+                </div>
+                <div class="avatar-card" onclick="selectAvatar(this,'林靖')" data-photo="林靖">
+                    <div class="avatar-img" style="background:linear-gradient(135deg,#43e97b,#38f9d7);display:flex;align-items:center;justify-content:center;">
+                        <i class="fas fa-male" style="font-size:32px;color:white;"></i>
+                    </div>
+                    <span>林靖</span>
+                    <small>科技博主</small>
+                </div>
+                <div class="avatar-card" onclick="selectAvatar(this,'一诺')" data-photo="一诺">
+                    <div class="avatar-img" style="background:linear-gradient(135deg,#fa709a,#fee140);display:flex;align-items:center;justify-content:center;">
+                        <i class="fas fa-female" style="font-size:32px;color:white;"></i>
+                    </div>
+                    <span>一诺</span>
+                    <small>青春活力</small>
+                </div>
+                <div class="avatar-card" onclick="selectAvatar(this,'林延')" data-photo="林延">
+                    <div class="avatar-img" style="background:linear-gradient(135deg,#a18cd1,#fbc2eb);display:flex;align-items:center;justify-content:center;">
+                        <i class="fas fa-male" style="font-size:32px;color:white;"></i>
+                    </div>
+                    <span>林延</span>
+                    <small>商务男士</small>
+                </div>
+                <div class="avatar-card" onclick="selectAvatar(this,'管管-实景')" data-photo="管管实景">
+                    <div class="avatar-img" style="background:linear-gradient(135deg,#ffecd2,#fcb69f);display:flex;align-items:center;justify-content:center;">
+                        <i class="fas fa-video" style="font-size:32px;color:white;"></i>
+                    </div>
+                    <span>管管</span>
+                    <small>实景播报</small>
+                </div>
+                <div class="avatar-card" onclick="selectAvatar(this,'江宁')" data-photo="江宁">
+                    <div class="avatar-img" style="background:linear-gradient(135deg,#667eea,#764ba2);display:flex;align-items:center;justify-content:center;">
+                        <i class="fas fa-female" style="font-size:32px;color:white;"></i>
+                    </div>
+                    <span>江宁</span>
+                    <small>专业主持</small>
+                </div>
+                <div class="avatar-card" onclick="selectAvatar(this,'林浩')" data-photo="林浩">
+                    <div class="avatar-img" style="background:linear-gradient(135deg,#43e97b,#38f9d7);display:flex;align-items:center;justify-content:center;">
+                        <i class="fas fa-male" style="font-size:32px;color:white;"></i>
+                    </div>
+                    <span>林浩</span>
+                    <small>医生专家</small>
+                </div>
             </div>
             <div class="form-group"><label><i class="fas fa-font"></i> 播报文案</label>
                 <textarea id="digitalHumanText" rows="6" placeholder="输入播报内容，建议100-500字..." oninput="updateCharCount('digitalHumanText','dhCharCount',2000)"></textarea>
@@ -253,7 +311,6 @@
             <div class="result-area" id="digitalHumanResult" style="display:none"></div>
         </div>
     </div>
-
     <div class="page" id="works">
         <div class="page-header"><button class="back-btn" onclick="navigateTo('home')"><i class="fas fa-arrow-left"></i></button><h2>作品管理</h2><div style="width:36px"></div></div>
         <div class="page-body">
@@ -307,6 +364,7 @@
 <script src="app.js"></script>
 </body>
 </html>
+
 
 
 

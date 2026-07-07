@@ -377,6 +377,7 @@ function generateAudio() {
 
 
 // ===== 8. 数字人视频生成（纯前端 Canvas 方案）=====
+// ===== 数字人生成 =====
 async function generateDigitalHuman() {
     const text = document.getElementById('digitalHumanText').value.trim();
     if (!text) return showToast('请输入播报文案');
@@ -386,13 +387,21 @@ async function generateDigitalHuman() {
     showLoading('正在生成数字人视频...');
     try {
         const optimized = await callAI(
-            '请将以下文案优化为适合数字人口播的版本，要求口语化、生动有趣、适合' + duration + '秒播报：\\n\\n' + text,
+            '请将以下文案优化为适合数字人口播的版本，要求口语化、生动有趣、适合' + duration + '秒播报：\n\n' + text,
             '你是一位专业的视频脚本编辑，擅长将文案转化为适合口播的形式。',
             1500
         );
-        const audioUrl = await getTTSUrl(text.substring(0, 500));
-        const videoBlob = await renderDigitalHumanVideo(avatar, optimized, ratio);
+        
+        // Step 1: Get TTS audio
+        showToast('🎙️ 正在生成配音...');
+        const audioBuffer = await getTTSAudio(text.substring(0, 500));
+        
+        // Step 2: Render video with audio
+        showToast('🎬 正在合成视频...');
+        const videoBlob = await renderDigitalHumanVideoWithAudio(avatar, optimized, ratio, audioBuffer);
         const videoUrl = URL.createObjectURL(videoBlob);
+        
+        // Step 3: Display result
         document.getElementById('digitalHumanResult').style.display = 'block';
         document.getElementById('digitalHumanResult').innerHTML = buildDHResult(avatar, ratio, duration, optimized, videoUrl);
         showToast('✅ 数字人视频生成成功！');
@@ -400,12 +409,13 @@ async function generateDigitalHuman() {
         console.error('Digital human error:', e);
         document.getElementById('digitalHumanResult').style.display = 'block';
         document.getElementById('digitalHumanResult').innerHTML = buildDHError(e.message, text, avatar);
-        showToast('❌ 生成失败，请检查 API 配置');
+        showToast('❌ 生成失败：' + e.message);
     }
     hideLoading();
 }
 
 function buildDHResult(avatar, ratio, duration, optimized, videoUrl) {
+    const ratioLabels = {'9:16':'竖屏 9:16','16:9':'横屏 16:9','1:1':'方形 1:1'};
     return '<div style="padding:16px;">' +
         '<div style="text-align:center;margin-bottom:16px;">' +
         '<div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#00B894,#55E6C1);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">' +
@@ -415,18 +425,18 @@ function buildDHResult(avatar, ratio, duration, optimized, videoUrl) {
         '<div style="background:#F5F6FA;border-radius:12px;padding:14px;margin-bottom:12px;">' +
         '<p style="font-size:12px;color:#999;margin-bottom:6px;">👤 数字人模板</p>' +
         '<p style="font-size:14px;font-weight:600;">' + avatar + '</p>' +
-        '<p style="font-size:12px;color:#999;margin-top:4px;">比例：' + ratio + ' | 时长：约' + duration + '秒</p></div>' +
+        '<p style="font-size:12px;color:#999;margin-top:4px;">比例：' + (ratioLabels[ratio]||ratio) + ' | 时长：约' + duration + '秒</p></div>' +
         '<div style="background:#F5F6FA;border-radius:12px;padding:14px;margin-bottom:12px;">' +
         '<p style="font-size:12px;color:#999;margin-bottom:6px;">📝 优化后的文案</p>' +
         '<p style="font-size:14px;color:#333;line-height:1.6;max-height:100px;overflow-y:auto;">' + formatMd(optimized) + '</p></div>' +
         '<div style="background:linear-gradient(135deg,#F3EEFF,#FFE8F0);border-radius:12px;padding:14px;margin-bottom:12px;">' +
         '<p style="font-size:14px;font-weight:600;margin-bottom:8px;">🎬 生成视频</p>' +
         '<video id="dhVideoPlayer" controls style="width:100%;border-radius:10px;margin-bottom:10px;background:#000;"><source src="' + videoUrl + '" type="video/webm"></video>' +
-        '<a href="' + videoUrl + '" download="数字人视频.webm" class="gradient-btn" style="text-decoration:none;display:block;text-align:center;">' +
+        '<a href="' + videoUrl + '" download="数字人视频_' + avatar + '.webm" class="gradient-btn" style="text-decoration:none;display:block;text-align:center;">' +
         '<i class="fas fa-download"></i> 下载视频 (WebM)</a></div>' +
         '<div style="background:#E8F5E9;border-radius:12px;padding:12px;margin-bottom:12px;">' +
         '<p style="font-size:13px;color:#2E7D32;"><i class="fas fa-check-circle"></i> <strong>生成流程：</strong><br>' +
-        '① AI 优化文案 → ② Edge TTS 生成配音 → ③ Canvas 合成视频（全部本地完成）</p></div>' +
+        '① AI 优化文案 → ② Edge TTS 生成配音 → ③ Canvas 合成视频+音频（全部本地完成）</p></div>' +
         '<div style="display:flex;gap:8px;">' +
         '<button class="action-btn" onclick="copyText(\'digitalHumanResult\')"><i class="fas fa-copy"></i> 复制方案</button>' +
         '<button class="action-btn" onclick="saveWork(\'digitalhuman\',\'' + avatar.replace(/'/g, "\\\\'") + '\')"><i class="fas fa-save"></i> 保存</button></div></div>';
@@ -450,126 +460,355 @@ function buildDHError(msg, text, avatar) {
         '<i class="fas fa-redo"></i> 重试</button></div>';
 }
 
-async function getTTSUrl(text) {
+// 使用 Edge TTS 获取音频并返回 ArrayBuffer
+async function getTTSAudio(text) {
     const voice = 'zh-CN-XiaoxiaoNeural';
-    const encoded = encodeURIComponent(text);
-    return 'https://edge-tts.vercel.app/api/tts?text=' + encoded + '&voice=' + voice + '&rate=+0%';
+    const ssml = '<speak xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="http://www.w3.org/2001/mstts" version="1.0" xml:lang="zh-CN">' +
+        '<voice name="' + voice + '">' +
+        '<mstts:express-as style="general" styleDegree="0.8">你好，这里是你的口播内容。</mstts:express-as>' +
+        '<prosody rate="1.0" pitch="0Hz">' + escapeXml(text) + '</prosody>' +
+        '</voice></speak>';
+    
+    // 尝试多个 Edge TTS API 端点
+    const endpoints = [
+        'https://edge-tts.vercel.app/api/tts',
+        'https://tts-api.fishaudio.top/v1/tts'
+    ];
+    
+    // 方法1: 使用 Edge TTS REST API
+    try {
+        const resp = await fetch('https://edge-tts.bing.com/api/tts', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/ssml+xml'},
+            body: '<speak version="1.0" xml:lang="zh-CN">' +
+                '<voice name="zh-CN-XiaoxiaoNeural">' +
+                '<prosody rate="+0%" pitch="+0Hz">' + escapeXml(text.substring(0, 500)) + '</prosody>' +
+                '</voice></speak>'
+        });
+        if (resp.ok) {
+            return await resp.arrayBuffer();
+        }
+    } catch(e) { /* fall through */ }
+    
+    // 方法2: 使用公共 Edge TTS proxy
+    const encodedText = encodeURIComponent(text.substring(0, 500));
+    const ttsUrl = 'https://edge-tts.vercel.app/api/tts?text=' + encodedText + '&voice=zh-CN-XiaoxiaoNeural&rate=+0%&pitch=+0Hz';
+    
+    const resp2 = await fetch(ttsUrl);
+    if (resp2.ok) {
+        return await resp2.arrayBuffer();
+    }
+    
+    // 方法3: 如果以上都不行，返回 null（无音频模式）
+    console.warn('TTS unavailable, generating silent video');
+    return null;
 }
 
-function drawAvatarPerson(ctx, avatar, canvasW, canvasH, progress) {
-    const centerX = canvasW / 2;
-    const centerY = canvasH * 0.35;
-    const headRadius = canvasW * 0.12;
-    const bodyTopY = centerY + headRadius;
-    const bodyHeight = canvasH * 0.25;
-    const bodyWidth = canvasW * 0.25;
+function escapeXml(str) {
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+}
+
+// 获取头像颜色配置
+function getAvatarColors(avatarName) {
     const colors = {
-        '商务男士-张总': { head: '#667eea', body: '#4a5568', skin: '#FDBCB4' },
-        '知性女声-李姐': { head: '#f093fb', body: '#6B46C1', skin: '#FDBCB4' },
-        '青春女孩-小美': { head: '#4facfe', body: '#2D3748', skin: '#FDBCB4' },
-        '科技博主-阿杰': { head: '#43e97b', body: '#2D3748', skin: '#FDBCB4' },
-        '美食博主-吃货王': { head: '#fa709a', body: '#6B46C1', skin: '#FDBCB4' },
-        '健身教练-大壮': { head: '#a18cd1', body: '#2D3748', skin: '#FDBCB4' }
+        '依菱': { primary: '#f093fb', secondary: '#f5576c', bg: 'linear-gradient(135deg, #fdf2f8, #fce7f3)' },
+        '沐沐': { primary: '#4facfe', secondary: '#00f2fe', bg: 'linear-gradient(135deg, #e0f2fe, #dbeafe)' },
+        '明轩': { primary: '#667eea', secondary: '#764ba2', bg: 'linear-gradient(135deg, #ede9fe, #e0e7ff)' },
+        '林靖': { primary: '#43e97b', secondary: '#38f9d7', bg: 'linear-gradient(135deg, #d1fae5, #ccfbf1)' },
+        '一诺': { primary: '#fa709a', secondary: '#fee140', bg: 'linear-gradient(135deg, #fef2f2, #fff7ed)' },
+        '林延': { primary: '#a18cd1', secondary: '#fbc2eb', bg: 'linear-gradient(135deg, #f3e8ff, #ede9fe)' },
+        '管管实景': { primary: '#ffecd2', secondary: '#fcb69f', bg: 'linear-gradient(135deg, #fff7ed, #ffedd5)' },
+        '江宁': { primary: '#667eea', secondary: '#764ba2', bg: 'linear-gradient(135deg, #ede9fe, #e0e7ff)' },
+        '林浩': { primary: '#43e97b', secondary: '#38f9d7', bg: 'linear-gradient(135deg, #d1fae5, #ccfbf1)' }
     };
-    const c = colors[avatar] || colors['商务男士-张总'];
-    ctx.fillStyle = c.body;
-    const bodyX = centerX - bodyWidth / 2;
-    ctx.beginPath();
-    ctx.roundRect(bodyX, bodyTopY, bodyWidth, bodyHeight, [12, 12, 0, 0]);
-    ctx.fill();
-    ctx.fillStyle = c.skin;
-    const neckW = headRadius * 0.5;
-    ctx.fillRect(centerX - neckW / 2, centerY + headRadius - 4, neckW, 12);
-    ctx.fillStyle = c.skin;
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, headRadius, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = c.head;
-    ctx.beginPath();
-    ctx.arc(centerX, centerY - 4, headRadius + 2, Math.PI, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#333';
-    const eyeY = centerY - 2;
-    const eyeSpacing = headRadius * 0.35;
-    const eyeSize = headRadius * 0.12;
-    ctx.beginPath();
-    ctx.arc(centerX - eyeSpacing, eyeY, eyeSize, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(centerX + eyeSpacing, eyeY, eyeSize, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#E53E3E';
-    const mouthY = centerY + headRadius * 0.35;
-    const mouthOpen = Math.sin(progress * Math.PI * 4) * 3 + 3;
-    ctx.beginPath();
-    ctx.ellipse(centerX, mouthY, headRadius * 0.2, mouthOpen, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = 'rgba(255,255,255,0.9)';
-    ctx.font = 'bold ' + (canvasW * 0.05) + 'px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(avatar, centerX, bodyTopY + bodyHeight + canvasW * 0.08);
+    return colors[avatarName] || { primary: '#667eea', secondary: '#764ba2', bg: 'linear-gradient(135deg, #ede9fe, #e0e7ff)' };
 }
 
-async function renderDigitalHumanVideo(avatar, script, ratio) {
+// 绘制精美的头像人物（非卡通，而是优雅的半身剪影）
+function drawAvatarPortrait(ctx, avatarName, canvasW, canvasH, progress, elapsed) {
+    const aname = avatarName.replace(/[-\s]/g, "");
+    const colors = getAvatarColors(avatarName);
+    const cx = canvasW / 2;
+    const cy = canvasH * 0.4;
+    
+    // 背景光晕效果
+    const glowR = Math.max(canvasW, canvasH) * 0.5;
+    const glow = ctx.createRadialGradient(cx, cy - canvasH * 0.05, 0, cx, cy - canvasH * 0.05, glowR);
+    glow.addColorStop(0, colors.primary + '20');
+    glow.addColorStop(1, 'transparent');
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, canvasW, canvasH);
+    
+    // 绘制人物剪影 - 优雅半身像
+    const headR = canvasW * 0.1;
+    const shoulderW = canvasW * 0.45;
+    const shoulderH = canvasH * 0.22;
+    const bodyTopY = cy + headR * 0.8;
+    
+    // 身体（西装/衬衫样式）
+    ctx.save();
+    const bodyGrad = ctx.createLinearGradient(cx - shoulderW/2, bodyTopY, cx + shoulderW/2, bodyTopY + shoulderH);
+    bodyGrad.addColorStop(0, colors.primary);
+    bodyGrad.addColorStop(1, colors.secondary);
+    ctx.fillStyle = bodyGrad;
+    
+    // 肩部曲线
+    ctx.beginPath();
+    ctx.moveTo(cx - shoulderW/2, bodyTopY + shoulderH);
+    ctx.quadraticCurveTo(cx - shoulderW/2 - 10, bodyTopY, cx - shoulderW/4, bodyTopY - 5);
+    // 领口
+    ctx.lineTo(cx - 8, bodyTopY + 15);
+    ctx.lineTo(cx, bodyTopY + 8);
+    ctx.lineTo(cx + 8, bodyTopY + 15);
+    ctx.lineTo(cx + shoulderW/4, bodyTopY - 5);
+    ctx.quadraticCurveTo(cx + shoulderW/2 + 10, bodyTopY, cx + shoulderW/2, bodyTopY + shoulderH);
+    ctx.lineTo(cx + shoulderW/2, bodyTopY + shoulderH + canvasH * 0.08);
+    ctx.lineTo(cx - shoulderW/2, bodyTopY + shoulderH + canvasH * 0.08);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+    
+    // 头部（圆形）
+    const headGrad = ctx.createRadialGradient(cx - headR*0.3, cy - headR*0.3, 0, cx, cy, headR);
+    headGrad.addColorStop(0, '#FDEBD0');
+    headGrad.addColorStop(1, '#F5CBA7');
+    ctx.fillStyle = headGrad;
+    ctx.beginPath();
+    ctx.arc(cx, cy, headR, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // 头发（根据性别和头像名称变化）
+    ctx.fillStyle = (aname === '依菱' || aname === '沐沐' || aname === '一诺' || aname === '林延' || aname === '管管' || aname === '江宁') 
+        ? '#4A3728' : '#2D2D2D';
+    ctx.beginPath();
+    ctx.arc(cx, cy - 4, headR + 3, Math.PI, Math.PI * 2);
+    ctx.fill();
+    
+    // 发型细节
+    if (avatarName === '依菱' || avatarName === '沐沐' || avatarName === '一诺') {
+        // 长发
+        ctx.beginPath();
+        ctx.ellipse(cx - headR - 2, cy + 5, 6, headR * 0.8, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(cx + headR + 2, cy + 5, 6, headR * 0.8, 0, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    
+    // 眼睛
+    ctx.fillStyle = '#333';
+    const eyeY = cy + 2;
+    const eyeSpacing = headR * 0.3;
+    const blinkPhase = Math.sin(elapsed * 0.5);
+    const eyeH = blinkPhase > 0.95 ? 1 : headR * 0.1;
+    ctx.beginPath();
+    ctx.ellipse(cx - eyeSpacing, eyeY, headR * 0.1, eyeH, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(cx + eyeSpacing, eyeY, headR * 0.1, eyeH, 0, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // 嘴巴（说话动画）
+    const mouthY = cy + headR * 0.4;
+    const mouthOpen = Math.abs(Math.sin(elapsed * 3)) * 4 + 1;
+    ctx.fillStyle = '#E53E3E';
+    ctx.beginPath();
+    ctx.ellipse(cx, mouthY, headR * 0.15, mouthOpen, 0, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // 名字标签
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    ctx.font = 'bold ' + (canvasW * 0.045) + 'px "Microsoft YaHei", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    
+    // 名字背景
+    const nameText = avatarName;
+    const nameW = ctx.measureText(nameText).width + 20;
+    const nameBgX = cx - nameW/2;
+    const nameBgY = bodyTopY + shoulderH + canvasH * 0.04;
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.beginPath();
+    ctx.roundRect(nameBgX, nameBgY, nameW, canvasW * 0.06, 6);
+    ctx.fill();
+    
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(nameText, cx, nameBgY + canvasW * 0.03);
+}
+
+// 渲染带音频的数字人视频
+async function renderDigitalHumanVideoWithAudio(avatar, script, ratio, audioArrayBuffer) {
     return new Promise((resolve, reject) => {
         const canvas = document.createElement('canvas');
         const dims = getRatioDimensions(ratio);
         canvas.width = dims.w;
         canvas.height = dims.h;
         const ctx = canvas.getContext('2d');
-        const stream = canvas.captureStream(30);
-        const recorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9' });
+        
+        const startTime = Date.now();
+        const totalChars = script.replace(/[^\\u4e00-\\u9fa5a-zA-Z]/g, '').length;
+        const totalDuration = Math.max(8, Math.min(totalChars * 0.25, 120));
+        
+        // 创建音频上下文
+        let audioCtx = null;
+        let audioSource = null;
+        let audioDestination = null;
+        let audioStartTime = 0;
+        
+        if (audioArrayBuffer && audioArrayBuffer.byteLength > 0) {
+            try {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                audioDestination = audioCtx.createMediaStreamDestination();
+                
+                // 解码音频数据
+                audioCtx.decodeAudioData(audioArrayBuffer.slice(0), function(decodedBuffer) {
+                    audioSource = audioCtx.createBufferSource();
+                    audioSource.buffer = decodedBuffer;
+                    audioSource.connect(audioDestination);
+                    audioSource.start(0);
+                    audioStartTime = Date.now();
+                }, function(e) {
+                    console.warn('Audio decode failed:', e);
+                    audioSource = null;
+                });
+                
+                if (!audioSource) {
+                    audioStartTime = startTime + 100; // slight delay
+                }
+            } catch(e) {
+                console.warn('AudioContext failed:', e);
+            }
+        }
+        
+        // 录制流 - 同时包含 canvas 和音频
+        const canvasStream = canvas.captureStream(30);
+        let combinedStream = canvasStream;
+        
+        if (audioDestination && audioDestination.stream) {
+            const tracks = [...canvasStream.getVideoTracks(), ...audioDestination.stream.getAudioTracks()];
+            combinedStream = new MediaStream(tracks);
+        }
+        
+        // 检测支持的 MIME 类型
+        let mimeType = 'video/webm;codecs=vp9,opus';
+        if (!MediaRecorder.isTypeSupported(mimeType)) {
+            mimeType = 'video/webm;codecs=vp8,opus';
+        }
+        if (!MediaRecorder.isTypeSupported(mimeType)) {
+            mimeType = 'video/webm';
+        }
+        
+        const recorder = new MediaRecorder(combinedStream, {
+            mimeType: mimeType,
+            videoBitsPerSecond: 2500000
+        });
+        
         const chunks = [];
         recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
-        recorder.onstop = () => resolve(new Blob(chunks, { type: 'video/webm' }));
-        recorder.start();
-        const lines = splitScript(script, canvas.width * 0.8);
+        recorder.onstop = () => {
+            const blob = new Blob(chunks, { type: mimeType });
+            if (audioCtx) audioCtx.close();
+            resolve(blob);
+        };
+        
+        recorder.start(100); // collect data every 100ms
+        
+        // 将脚本分成行
+        const lines = splitScript(script, canvas.width * 0.75);
         let currentLine = 0;
         let lineCharIndex = 0;
-        const startTime = Date.now();
-        const totalDuration = Math.max(10, Math.min(lines.join('').length * 0.3, 60));
+        
         function drawFrame() {
             const elapsed = (Date.now() - startTime) / 1000;
-            if (elapsed >= totalDuration) { recorder.stop(); return; }
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            if (elapsed >= totalDuration + 1) {
+                recorder.stop();
+                return;
+            }
+            
+            // 清屏 + 渐变背景
             const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-            grad.addColorStop(0, '#1a1a2e');
-            grad.addColorStop(1, '#16213e');
+            grad.addColorStop(0, '#0f0c29');
+            grad.addColorStop(0.5, '#1a1a3e');
+            grad.addColorStop(1, '#24243e');
             ctx.fillStyle = grad;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            const glowGrad = ctx.createRadialGradient(canvas.width * 0.5, canvas.height * 0.3, 0, canvas.width * 0.5, canvas.height * 0.3, canvas.width * 0.4);
-            glowGrad.addColorStop(0, 'rgba(108, 92, 231, 0.15)');
-            glowGrad.addColorStop(1, 'rgba(108, 92, 231, 0)');
-            ctx.fillStyle = glowGrad;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            drawAvatarPerson(ctx, avatar, canvas.width, canvas.height, elapsed);
-            ctx.fillStyle = 'rgba(0,0,0,0.7)';
-            ctx.fillRect(0, canvas.height * 0.65, canvas.width, canvas.height * 0.35);
+            
+            // 装饰粒子效果
+            for (let i = 0; i < 15; i++) {
+                const px = (Math.sin(elapsed * 0.3 + i * 1.7) * 0.5 + 0.5) * canvas.width;
+                const py = (Math.cos(elapsed * 0.2 + i * 2.1) * 0.5 + 0.5) * canvas.height;
+                const pr = 1 + Math.sin(elapsed + i) * 1;
+                ctx.fillStyle = 'rgba(108, 92, 231, ' + (0.1 + Math.sin(elapsed * 0.5 + i) * 0.05) + ')';
+                ctx.beginPath();
+                ctx.arc(px, py, pr, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            // 绘制数字人
+            drawAvatarPortrait(ctx, avatar, canvas.width, canvas.height, elapsed, elapsed);
+            
+            // 底部字幕区域
+            const subtitleY = canvas.height * 0.62;
+            const subtitleH = canvas.height * 0.33;
+            
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
+            ctx.beginPath();
+            ctx.roundRect(canvas.width * 0.04, subtitleY, canvas.width * 0.92, subtitleH, 12);
+            ctx.fill();
+            
+            // 字幕文字打字机效果
             ctx.fillStyle = '#ffffff';
             ctx.textAlign = 'left';
-            const fontSize = canvas.width * 0.04;
-            ctx.font = fontSize + 'px sans-serif';
+            const fontSize = Math.max(14, canvas.width * 0.035);
+            ctx.font = fontSize + 'px "Microsoft YaHei", "PingFang SC", sans-serif';
+            
             const currentScript = lines[currentLine] || '';
-            const displayText = currentScript.substring(0, lineCharIndex);
-            ctx.fillText(displayText, canvas.width * 0.08, canvas.height * 0.78);
+            const displayText = currentScript.substring(0, Math.max(0, lineCharIndex));
+            
+            // 文字阴影
+            ctx.shadowColor = 'rgba(0,0,0,0.5)';
+            ctx.shadowBlur = 4;
+            ctx.shadowOffsetX = 1;
+            ctx.shadowOffsetY = 1;
+            ctx.fillText(displayText, canvas.width * 0.08, subtitleY + subtitleH * 0.45);
+            ctx.shadowColor = 'transparent';
+            
+            // 进度条
             const progress = Math.min(elapsed / totalDuration, 1);
-            ctx.fillStyle = 'rgba(255,255,255,0.2)';
-            ctx.fillRect(canvas.width * 0.05, canvas.height * 0.93, canvas.width * 0.9, 4);
-            ctx.fillStyle = '#6C5CE7';
-            ctx.fillRect(canvas.width * 0.05, canvas.height * 0.93, canvas.width * 0.9 * progress, 4);
-            const mins = Math.floor(elapsed / 60);
-            const secs = Math.floor(elapsed % 60);
-            ctx.fillStyle = 'rgba(255,255,255,0.6)';
-            ctx.font = (canvas.width * 0.03) + 'px monospace';
+            const barY = subtitleY + subtitleH - 16;
+            ctx.fillStyle = 'rgba(255,255,255,0.15)';
+            ctx.beginPath();
+            ctx.roundRect(canvas.width * 0.06, barY, canvas.width * 0.88, 4, 2);
+            ctx.fill();
+            
+            const progGrad = ctx.createLinearGradient(canvas.width * 0.06, 0, canvas.width * 0.94, 0);
+            progGrad.addColorStop(0, '#667eea');
+            progGrad.addColorStop(1, '#764ba2');
+            ctx.fillStyle = progGrad;
+            ctx.beginPath();
+            ctx.roundRect(canvas.width * 0.06, barY, canvas.width * 0.88 * progress, 4, 2);
+            ctx.fill();
+            
+            // 计时器
+            const secs = Math.floor(elapsed);
+            const mins = Math.floor(secs / 60);
+            const s = secs % 60;
+            ctx.fillStyle = 'rgba(255,255,255,0.5)';
+            ctx.font = (fontSize * 0.7) + 'px monospace';
             ctx.textAlign = 'right';
-            ctx.fillText(mins.toString().padStart(2, '0') + ':' + secs.toString().padStart(2, '0'), canvas.width * 0.95, canvas.height * 0.93);
-            if (elapsed > 0 && Math.floor(elapsed / 1.5) > currentLine) {
-                currentLine = Math.min(Math.floor(elapsed / 1.5), lines.length - 1);
+            ctx.fillText((mins.toString().padStart(2,'0') + ':' + s.toString().padStart(2,'0')), canvas.width * 0.94, barY - 6);
+            
+            // 更新字幕行
+            if (elapsed > 0.3 && Math.floor(elapsed / 1.8) > currentLine) {
+                currentLine = Math.min(Math.floor(elapsed / 1.8), lines.length - 1);
                 lineCharIndex = 0;
             }
-            lineCharIndex = Math.min(lineCharIndex + 3, (lines[currentLine] || '').length);
+            lineCharIndex = Math.min(lineCharIndex + 2, currentScript.length);
+            
             requestAnimationFrame(drawFrame);
         }
+        
         drawFrame();
     });
 }
@@ -582,17 +821,6 @@ function getRatioDimensions(ratio) {
         default: return { w: 540, h: 960 };
     }
 }
-
-function splitScript(script, maxWidth) {
-    const charsPerLine = Math.floor(maxWidth / 18);
-    const lines = [];
-    for (let i = 0; i < script.length; i += charsPerLine) {
-        lines.push(script.substring(i, i + charsPerLine));
-    }
-    return lines;
-}
-
-function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 function saveWork(type, preview) {
     let content = '';
     let title = '';
@@ -716,6 +944,14 @@ function clearAllData() {
     renderWorks();
     showToast('✅ 所有数据已清除');
 }
+
+
+
+
+
+
+
+
 
 
 
