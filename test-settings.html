@@ -1,0 +1,26 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Settings Test</title>
+    <style>
+        .page { display: none; }
+        .page.active { display: block; }
+        .settings-card { margin: 16px; padding: 16px; border: 1px solid #ddd; border-radius: 8px; }
+    </style>
+</head>
+<body>
+    <div class="page active" id="settings">
+        <h2>设置测试</h2>
+        <div class="settings-card">
+            <h4>AI 配置</h4>
+            <input type="text" id="apiBase" placeholder="API 地址">
+            <input type="password" id="apiKey" placeholder="API Key">
+            <button onclick="alert('测试成功')">测试按钮</button>
+        </div>
+    </div>
+    <script>
+        console.log("Page loaded successfully");
+    </script>
+</body>
+</html>
